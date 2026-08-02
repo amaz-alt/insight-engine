@@ -6,6 +6,11 @@ ENV NODE_ENV=production \
     PORT=8787 \
     BIND=0.0.0.0
 
+# Tools for the one-time interactive Facebook login over noVNC.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      xvfb x11vnc novnc websockify x11-utils \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY package.json ./

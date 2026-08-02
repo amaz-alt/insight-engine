@@ -38,17 +38,58 @@ export async function getPage() {
     }
   }
 
-  context = await chromium.launchPersistentContext(config.profileDir, {
-    headless: config.headless,
-    viewport: { width: 1366, height: 900 },
-    locale: "en-US",
-    timezoneId: process.env.TZ || undefined,
-    args: [
-      "--disable-blink-features=AutomationControlled",
-      "--no-sandbox",
-      "--disable-dev-shm-usage",
-    ],
-  });
+  // Playwright's bundled Chromium lives under PLAYWRIGHT_BROWSERS_PATH; install.sh
+  // puts it in a shared location so root and systemd resolve the same binary.
+  let executablePath;
+  try {
+    executablePath = chromium.executablePath();
+  } catch {
+    executablePath = undefined;
+  }
+  if (executablePath && !fs.existsSync(executablePath)) {
+    log.error("chrome.missing", {
+      executablePath,
+      browsersPath: process.env.PLAYWRIGHT_BROWSERS_PATH ?? "(default)",
+      hint: "run: PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright npx playwright install --with-deps chromium",
+    });
+    state.chromeStatus = "missing";
+    throw new Error(`Chromium is not installed at ${executablePath}. Re-run install.sh.`);
+  }
+
+  const args = [
+    "--disable-blink-features=AutomationControlled",
+    // Chrome refuses to start as root without this; the VPS runs the worker as root.
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--password-store=basic",
+    "--use-mock-keychain",
+  ];
+
+  try {
+    context = await chromium.launchPersistentContext(config.profileDir, {
+      headless: config.headless,
+      viewport: { width: 1366, height: 900 },
+      locale: "en-US",
+      timezoneId: process.env.TZ || undefined,
+      ignoreDefaultArgs: ["--enable-automation"],
+      args,
+    });
+  } catch (error) {
+    state.chromeStatus = "failed";
+    log.error("chrome.launch_failed", {
+      error: String(error?.message ?? error),
+      headless: config.headless,
+      display: process.env.DISPLAY ?? "(none)",
+      hint: config.headless
+        ? "check that Chromium and its system libraries are installed (bash install.sh)"
+        : "an X display is required for headful mode — start it with login.sh",
+    });
+    throw error;
+  }
 
   context.on("close", () => {
     state.chromeStatus = "crashed";
@@ -60,9 +101,14 @@ export async function getPage() {
   page = context.pages()[0] ?? (await context.newPage());
   page.setDefaultTimeout(45_000);
   state.chromeStatus = "running";
-  log.info("chrome.started", { headless: config.headless, profile: config.profileDir });
+  log.info("chrome.started", {
+    headless: config.headless,
+    profile: config.profileDir,
+    executablePath: executablePath ?? "(playwright default)",
+  });
   return page;
 }
+
 
 export async function closeBrowser() {
   try {
@@ -82,6 +128,31 @@ export async function restartBrowser(reason) {
   await closeBrowser();
   await pause(2000, 5000);
   return getPage();
+}
+
+/**
+ * Cookie-only session probe. Never navigates, so it is safe to poll while the
+ * user is typing into the Facebook login form during the one-time login.
+ */
+export async function probeSession(p) {
+  let cookies = [];
+  try {
+    cookies = await p.context().cookies("https://www.facebook.com");
+  } catch {
+    return { loggedIn: false, expiresAt: null };
+  }
+  const cUser = cookies.find((c) => c.name === "c_user");
+  const xs = cookies.find((c) => c.name === "xs");
+  const loggedIn = Boolean(cUser?.value && xs?.value);
+
+  state.sessionStatus = loggedIn ? "connected" : "needs_login";
+  if (loggedIn) state.sessionValidatedAt = new Date().toISOString();
+
+  const expiry = [xs, cUser].find((c) => c?.expires > 0);
+  return {
+    loggedIn,
+    expiresAt: expiry ? new Date(expiry.expires * 1000).toISOString() : null,
+  };
 }
 
 /** True when the persistent profile still holds a valid Facebook session. */

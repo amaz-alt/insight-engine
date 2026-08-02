@@ -40,7 +40,9 @@ services:
     shm_size: "1gb"
     init: true
     command: >
-      bash -lc "Xvfb :99 -screen 0 1366x900x24 &
-                x11vnc -display :99 -forever -nopw -quiet -bg;
+      bash -lc "rm -f /tmp/.X99-lock;
+                Xvfb :99 -screen 0 1366x900x24 -nolisten tcp -ac &
+                for i in $$(seq 1 30); do xdpyinfo -display :99 >/dev/null 2>&1 && break; sleep 1; done;
+                x11vnc -display :99 -rfbport 5900 -forever -shared -nopw -noxdamage -repeat -xkb -bg -o /data/logs/x11vnc.log;
                 websockify --web=/usr/share/novnc 6080 localhost:5900 &
                 node src/index.mjs"

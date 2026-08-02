@@ -15,7 +15,7 @@ if [[ -f docker-compose.yml && -n "$(docker ps -q -f name=fb-worker 2>/dev/null 
 else
   echo "==> Installing dependencies"
   npm install --omit=dev
-  npx --yes playwright install chromium
+  PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-/opt/ms-playwright}" npx --yes playwright install --with-deps chromium
   if systemctl list-unit-files | grep -q fb-worker.service; then
     echo "==> Restarting systemd service"
     systemctl restart fb-worker
