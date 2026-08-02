@@ -1,0 +1,20 @@
+[Unit]
+Description=Facebook Growth OS worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/fb-worker
+EnvironmentFile=/opt/fb-worker/.env
+ExecStart=/usr/bin/node /opt/fb-worker/src/index.mjs
+Restart=always
+RestartSec=10
+# Survive a VPS reboot and keep restarting forever without tripping the limiter.
+StartLimitIntervalSec=0
+StandardOutput=append:/opt/fb-worker/logs/systemd.log
+StandardError=append:/opt/fb-worker/logs/systemd.log
+
+[Install]
+WantedBy=multi-user.target
