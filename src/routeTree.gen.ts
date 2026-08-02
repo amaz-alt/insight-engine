@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ContentRouteImport } from './routes/content'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as InsightsIndexRouteImport } from './routes/insights.index'
 import { Route as InsightsIdRouteImport } from './routes/insights.$id'
@@ -21,6 +22,11 @@ import { Route as ApiPublicWorkerJobsRouteImport } from './routes/api/public/wor
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContentRoute = ContentRouteImport.update({
+  id: '/content',
+  path: '/content',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GroupsRoute = GroupsRouteImport.update({
@@ -62,6 +68,7 @@ const ApiPublicWorkerJobsRoute = ApiPublicWorkerJobsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/content': typeof ContentRoute
   '/groups': typeof GroupsRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/content': typeof ContentRoute
   '/groups': typeof GroupsRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights': typeof InsightsIndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/content': typeof ContentRoute
   '/groups': typeof GroupsRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/content'
     | '/groups'
     | '/insights/$id'
     | '/insights/'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/content'
     | '/groups'
     | '/insights/$id'
     | '/insights'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/content'
     | '/groups'
     | '/insights/$id'
     | '/insights/'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ContentRoute: typeof ContentRoute
   GroupsRoute: typeof GroupsRoute
   InsightsIdRoute: typeof InsightsIdRoute
   InsightsIndexRoute: typeof InsightsIndexRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/content': {
+      id: '/content'
+      path: '/content'
+      fullPath: '/content'
+      preLoaderRoute: typeof ContentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/groups': {
@@ -198,6 +218,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ContentRoute: ContentRoute,
   GroupsRoute: GroupsRoute,
   InsightsIdRoute: InsightsIdRoute,
   InsightsIndexRoute: InsightsIndexRoute,
