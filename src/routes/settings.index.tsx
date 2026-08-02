@@ -18,7 +18,7 @@ import {
 } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/settings/")({
   head: () => ({
     meta: [
       { title: "Worker Settings & Safety Limits — Facebook Growth OS" },

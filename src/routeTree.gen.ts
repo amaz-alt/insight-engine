@@ -15,10 +15,10 @@ import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as ScheduleRouteImport } from './routes/schedule'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WorkerRouteImport } from './routes/worker'
 import { Route as InsightsIndexRouteImport } from './routes/insights.index'
 import { Route as InsightsIdRouteImport } from './routes/insights.$id'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as ApiPublicCronAiCycleRouteImport } from './routes/api/public/cron/ai-cycle'
 import { Route as ApiPublicWorkerCompleteRouteImport } from './routes/api/public/worker/complete'
 import { Route as ApiPublicWorkerHeartbeatRouteImport } from './routes/api/public/worker/heartbeat'
@@ -55,11 +55,6 @@ const ScheduleRoute = ScheduleRouteImport.update({
   path: '/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WorkerRoute = WorkerRouteImport.update({
   id: '/worker',
   path: '/worker',
@@ -73,6 +68,11 @@ const InsightsIndexRoute = InsightsIndexRouteImport.update({
 const InsightsIdRoute = InsightsIdRouteImport.update({
   id: '/insights/$id',
   path: '/insights/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicCronAiCycleRoute = ApiPublicCronAiCycleRouteImport.update({
@@ -109,10 +109,10 @@ export interface FileRoutesByFullPath {
   '/groups': typeof GroupsRoute
   '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
-  '/settings': typeof SettingsRoute
   '/worker': typeof WorkerRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/api/public/cron/ai-cycle': typeof ApiPublicCronAiCycleRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
@@ -126,10 +126,10 @@ export interface FileRoutesByTo {
   '/groups': typeof GroupsRoute
   '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
-  '/settings': typeof SettingsRoute
   '/worker': typeof WorkerRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights': typeof InsightsIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/api/public/cron/ai-cycle': typeof ApiPublicCronAiCycleRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
@@ -144,10 +144,10 @@ export interface FileRoutesById {
   '/groups': typeof GroupsRoute
   '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
-  '/settings': typeof SettingsRoute
   '/worker': typeof WorkerRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/api/public/cron/ai-cycle': typeof ApiPublicCronAiCycleRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
@@ -163,10 +163,10 @@ export interface FileRouteTypes {
     | '/groups'
     | '/knowledge'
     | '/schedule'
-    | '/settings'
     | '/worker'
     | '/insights/$id'
     | '/insights/'
+    | '/settings/'
     | '/api/public/cron/ai-cycle'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
@@ -180,10 +180,10 @@ export interface FileRouteTypes {
     | '/groups'
     | '/knowledge'
     | '/schedule'
-    | '/settings'
     | '/worker'
     | '/insights/$id'
     | '/insights'
+    | '/settings'
     | '/api/public/cron/ai-cycle'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
@@ -197,10 +197,10 @@ export interface FileRouteTypes {
     | '/groups'
     | '/knowledge'
     | '/schedule'
-    | '/settings'
     | '/worker'
     | '/insights/$id'
     | '/insights/'
+    | '/settings/'
     | '/api/public/cron/ai-cycle'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
@@ -215,10 +215,10 @@ export interface RootRouteChildren {
   GroupsRoute: typeof GroupsRoute
   KnowledgeRoute: typeof KnowledgeRoute
   ScheduleRoute: typeof ScheduleRoute
-  SettingsRoute: typeof SettingsRoute
   WorkerRoute: typeof WorkerRoute
   InsightsIdRoute: typeof InsightsIdRoute
   InsightsIndexRoute: typeof InsightsIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
   ApiPublicCronAiCycleRoute: typeof ApiPublicCronAiCycleRoute
   ApiPublicWorkerCompleteRoute: typeof ApiPublicWorkerCompleteRoute
   ApiPublicWorkerHeartbeatRoute: typeof ApiPublicWorkerHeartbeatRoute
@@ -270,13 +270,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScheduleRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/worker': {
       id: '/worker'
       path: '/worker'
@@ -296,6 +289,13 @@ declare module '@tanstack/react-router' {
       path: '/insights/$id'
       fullPath: '/insights/$id'
       preLoaderRoute: typeof InsightsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/cron/ai-cycle': {
@@ -343,10 +343,10 @@ const rootRouteChildren: RootRouteChildren = {
   GroupsRoute: GroupsRoute,
   KnowledgeRoute: KnowledgeRoute,
   ScheduleRoute: ScheduleRoute,
-  SettingsRoute: SettingsRoute,
   WorkerRoute: WorkerRoute,
   InsightsIdRoute: InsightsIdRoute,
   InsightsIndexRoute: InsightsIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
   ApiPublicCronAiCycleRoute: ApiPublicCronAiCycleRoute,
   ApiPublicWorkerCompleteRoute: ApiPublicWorkerCompleteRoute,
   ApiPublicWorkerHeartbeatRoute: ApiPublicWorkerHeartbeatRoute,
