@@ -42,7 +42,9 @@ function GroupsPage() {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [folderId, setFolderId] = useState("");
+  const [newFolder, setNewFolder] = useState("");
   const [filter, setFilter] = useState("all");
+
 
   const { data: folders } = useQuery({
     queryKey: ["folders"],
