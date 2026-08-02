@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicWorkerHeartbeatRouteImport } from './routes/api/public/worker/heartbeat'
+import { Route as ApiPublicWorkerJobsRouteImport } from './routes/api/public/worker/jobs'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,31 +24,44 @@ const ApiPublicWorkerHeartbeatRoute =
     path: '/api/public/worker/heartbeat',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWorkerJobsRoute = ApiPublicWorkerJobsRouteImport.update({
+  id: '/api/public/worker/jobs',
+  path: '/api/public/worker/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
+  '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
+  '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
+  '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/worker/heartbeat'
+  fullPaths: '/' | '/api/public/worker/heartbeat' | '/api/public/worker/jobs'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/worker/heartbeat'
-  id: '__root__' | '/' | '/api/public/worker/heartbeat'
+  to: '/' | '/api/public/worker/heartbeat' | '/api/public/worker/jobs'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/public/worker/heartbeat'
+    | '/api/public/worker/jobs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicWorkerHeartbeatRoute: typeof ApiPublicWorkerHeartbeatRoute
+  ApiPublicWorkerJobsRoute: typeof ApiPublicWorkerJobsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -66,12 +80,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWorkerHeartbeatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/worker/jobs': {
+      id: '/api/public/worker/jobs'
+      path: '/api/public/worker/jobs'
+      fullPath: '/api/public/worker/jobs'
+      preLoaderRoute: typeof ApiPublicWorkerJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicWorkerHeartbeatRoute: ApiPublicWorkerHeartbeatRoute,
+  ApiPublicWorkerJobsRoute: ApiPublicWorkerJobsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
