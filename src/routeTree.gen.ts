@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicWorkerHeartbeatRouteImport } from './routes/api/public/worker/heartbeat'
+import { Route as ApiPublicWorkerIngestRouteImport } from './routes/api/public/worker/ingest'
 import { Route as ApiPublicWorkerJobsRouteImport } from './routes/api/public/worker/jobs'
 
 const IndexRoute = IndexRouteImport.update({
@@ -24,6 +25,11 @@ const ApiPublicWorkerHeartbeatRoute =
     path: '/api/public/worker/heartbeat',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWorkerIngestRoute = ApiPublicWorkerIngestRouteImport.update({
+  id: '/api/public/worker/ingest',
+  path: '/api/public/worker/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWorkerJobsRoute = ApiPublicWorkerJobsRouteImport.update({
   id: '/api/public/worker/jobs',
   path: '/api/public/worker/jobs',
@@ -33,34 +39,47 @@ const ApiPublicWorkerJobsRoute = ApiPublicWorkerJobsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
+  '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
   '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
+  '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
   '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
+  '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
   '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/worker/heartbeat' | '/api/public/worker/jobs'
+  fullPaths:
+    | '/'
+    | '/api/public/worker/heartbeat'
+    | '/api/public/worker/ingest'
+    | '/api/public/worker/jobs'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/worker/heartbeat' | '/api/public/worker/jobs'
+  to:
+    | '/'
+    | '/api/public/worker/heartbeat'
+    | '/api/public/worker/ingest'
+    | '/api/public/worker/jobs'
   id:
     | '__root__'
     | '/'
     | '/api/public/worker/heartbeat'
+    | '/api/public/worker/ingest'
     | '/api/public/worker/jobs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicWorkerHeartbeatRoute: typeof ApiPublicWorkerHeartbeatRoute
+  ApiPublicWorkerIngestRoute: typeof ApiPublicWorkerIngestRoute
   ApiPublicWorkerJobsRoute: typeof ApiPublicWorkerJobsRoute
 }
 
@@ -80,6 +99,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWorkerHeartbeatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/worker/ingest': {
+      id: '/api/public/worker/ingest'
+      path: '/api/public/worker/ingest'
+      fullPath: '/api/public/worker/ingest'
+      preLoaderRoute: typeof ApiPublicWorkerIngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/worker/jobs': {
       id: '/api/public/worker/jobs'
       path: '/api/public/worker/jobs'
@@ -93,6 +119,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicWorkerHeartbeatRoute: ApiPublicWorkerHeartbeatRoute,
+  ApiPublicWorkerIngestRoute: ApiPublicWorkerIngestRoute,
   ApiPublicWorkerJobsRoute: ApiPublicWorkerJobsRoute,
 }
 export const routeTree = rootRouteImport

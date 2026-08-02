@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { authorizeWorker, fingerprint, json, log } from "@/lib/worker.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Json } from "@/integrations/supabase/types";
 
 type IncomingPost = {
   fb_post_id?: string;
@@ -12,7 +13,7 @@ type IncomingPost = {
   reactions?: number;
   comments_count?: number;
   shares?: number;
-  top_comments?: unknown[];
+  top_comments?: Json[];
 };
 
 /** The worker pushes scraped discussions here. Duplicates are never stored. */
