@@ -1,0 +1,19 @@
+{
+  "name": "fb-growth-os-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Facebook Growth OS — VPS browser worker (Playwright + persistent Chrome profile)",
+  "main": "src/index.mjs",
+  "scripts": {
+    "start": "node src/index.mjs",
+    "login": "HEADLESS=false LOGIN_ONLY=true node src/index.mjs",
+    "status": "node -e \"fetch('http://127.0.0.1:'+(process.env.PORT||8787)+'/status',{headers:{'x-worker-token':process.env.WORKER_TOKEN}}).then(r=>r.json()).then(d=>console.log(JSON.stringify(d,null,2)))\""
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

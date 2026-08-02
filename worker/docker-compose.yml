@@ -1,0 +1,46 @@
+services:
+  worker:
+    build: .
+    image: fb-growth-os-worker:1.0.0
+    container_name: fb-worker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HEADLESS: "true"
+      PROFILE_DIR: /data/fb-profile
+      LOG_DIR: /data/logs
+    ports:
+      # Loopback only — reach it through an SSH tunnel if you need it remotely.
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - ./fb-profile:/data/fb-profile
+      - ./logs:/data/logs
+    shm_size: "1gb"
+    init: true
+
+  # One-time Facebook login over VNC: `docker compose up login`
+  # then open http://<vps-ip>:6080 in your own browser and sign in.
+  login:
+    build: .
+    image: fb-growth-os-worker:1.0.0
+    container_name: fb-worker-login
+    profiles: ["login"]
+    env_file: .env
+    environment:
+      HEADLESS: "false"
+      LOGIN_ONLY: "true"
+      PROFILE_DIR: /data/fb-profile
+      LOG_DIR: /data/logs
+      DISPLAY: ":99"
+    ports:
+      - "6080:6080"
+    volumes:
+      - ./fb-profile:/data/fb-profile
+      - ./logs:/data/logs
+    shm_size: "1gb"
+    init: true
+    command: >
+      bash -lc "Xvfb :99 -screen 0 1366x900x24 &
+                x11vnc -display :99 -forever -nopw -quiet -bg;
+                websockify --web=/usr/share/novnc 6080 localhost:5900 &
+                node src/index.mjs"
