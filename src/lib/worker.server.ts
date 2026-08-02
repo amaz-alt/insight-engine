@@ -55,7 +55,7 @@ export async function log(
   level: string,
   message: string,
   groupId?: string | null,
-  meta: Record<string, unknown> = {},
+  meta: Record<string, string | number | boolean | null> = {},
 ) {
   await supabaseAdmin.from("activity_log").insert({
     kind,
