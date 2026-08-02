@@ -10,7 +10,15 @@ import { assertConfig, config } from "./config.mjs";
 import { log } from "./logger.mjs";
 import { api } from "./api.mjs";
 import { backoffMs, pause, shuffle, sleep } from "./human.mjs";
-import { checkSession, closeBrowser, getPage, restartBrowser, state } from "./browser.mjs";
+import {
+  checkSession,
+  closeBrowser,
+  getPage,
+  probeSession,
+  restartBrowser,
+  state,
+} from "./browser.mjs";
+
 import { publishPost, scanGroup } from "./jobs.mjs";
 import { startServer } from "./server.mjs";
 
