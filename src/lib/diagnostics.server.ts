@@ -82,7 +82,17 @@ export async function runDiagnostics(): Promise<{ ranAt: string; checks: Check[]
     timed("db-tables", "Database", "All tables readable", async () => {
       const results = await Promise.all(
         TABLES.map(async (table) => {
-          const { error } = await supabaseAdmin.from(table).select("*", { head: true, count: "exact" });
+          const query = (
+            supabaseAdmin as unknown as {
+              from: (t: string) => {
+                select: (
+                  columns: string,
+                  options: { head: boolean; count: "exact" },
+                ) => Promise<{ error: { message: string } | null }>;
+              };
+            }
+          ).from(table);
+          const { error } = await query.select("*", { head: true, count: "exact" });
           return { table, error: error?.message ?? null };
         }),
       );
@@ -218,7 +228,7 @@ export async function runDiagnostics(): Promise<{ ranAt: string; checks: Check[]
       const { count } = await supabaseAdmin
         .from("posts")
         .select("*", { head: true, count: "exact" })
-        .eq("analyzed", false);
+        .is("analyzed_at", null);
       if ((count ?? 0) > 200)
         return {
           status: "warn",
