@@ -130,6 +130,31 @@ export async function restartBrowser(reason) {
   return getPage();
 }
 
+/**
+ * Cookie-only session probe. Never navigates, so it is safe to poll while the
+ * user is typing into the Facebook login form during the one-time login.
+ */
+export async function probeSession(p) {
+  let cookies = [];
+  try {
+    cookies = await p.context().cookies("https://www.facebook.com");
+  } catch {
+    return { loggedIn: false, expiresAt: null };
+  }
+  const cUser = cookies.find((c) => c.name === "c_user");
+  const xs = cookies.find((c) => c.name === "xs");
+  const loggedIn = Boolean(cUser?.value && xs?.value);
+
+  state.sessionStatus = loggedIn ? "connected" : "needs_login";
+  if (loggedIn) state.sessionValidatedAt = new Date().toISOString();
+
+  const expiry = [xs, cUser].find((c) => c?.expires > 0);
+  return {
+    loggedIn,
+    expiresAt: expiry ? new Date(expiry.expires * 1000).toISOString() : null,
+  };
+}
+
 /** True when the persistent profile still holds a valid Facebook session. */
 export async function checkSession(p) {
   await p.goto("https://www.facebook.com/", { waitUntil: "domcontentloaded" });
