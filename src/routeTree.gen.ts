@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as InsightsIndexRouteImport } from './routes/insights.index'
+import { Route as InsightsIdRouteImport } from './routes/insights.$id'
 import { Route as ApiPublicWorkerCompleteRouteImport } from './routes/api/public/worker/complete'
 import { Route as ApiPublicWorkerHeartbeatRouteImport } from './routes/api/public/worker/heartbeat'
 import { Route as ApiPublicWorkerIngestRouteImport } from './routes/api/public/worker/ingest'
@@ -30,6 +31,11 @@ const GroupsRoute = GroupsRouteImport.update({
 const InsightsIndexRoute = InsightsIndexRouteImport.update({
   id: '/insights/',
   path: '/insights/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsightsIdRoute = InsightsIdRouteImport.update({
+  id: '/insights/$id',
+  path: '/insights/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicWorkerCompleteRoute = ApiPublicWorkerCompleteRouteImport.update({
@@ -57,6 +63,7 @@ const ApiPublicWorkerJobsRoute = ApiPublicWorkerJobsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/groups': typeof GroupsRoute
+  '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/groups': typeof GroupsRoute
+  '/insights/$id': typeof InsightsIdRoute
   '/insights': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/groups': typeof GroupsRoute
+  '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/groups'
+    | '/insights/$id'
     | '/insights/'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/groups'
+    | '/insights/$id'
     | '/insights'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/groups'
+    | '/insights/$id'
     | '/insights/'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
@@ -115,6 +127,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GroupsRoute: typeof GroupsRoute
+  InsightsIdRoute: typeof InsightsIdRoute
   InsightsIndexRoute: typeof InsightsIndexRoute
   ApiPublicWorkerCompleteRoute: typeof ApiPublicWorkerCompleteRoute
   ApiPublicWorkerHeartbeatRoute: typeof ApiPublicWorkerHeartbeatRoute
@@ -143,6 +156,13 @@ declare module '@tanstack/react-router' {
       path: '/insights'
       fullPath: '/insights/'
       preLoaderRoute: typeof InsightsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights/$id': {
+      id: '/insights/$id'
+      path: '/insights/$id'
+      fullPath: '/insights/$id'
+      preLoaderRoute: typeof InsightsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/worker/complete': {
@@ -179,6 +199,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GroupsRoute: GroupsRoute,
+  InsightsIdRoute: InsightsIdRoute,
   InsightsIndexRoute: InsightsIndexRoute,
   ApiPublicWorkerCompleteRoute: ApiPublicWorkerCompleteRoute,
   ApiPublicWorkerHeartbeatRoute: ApiPublicWorkerHeartbeatRoute,
