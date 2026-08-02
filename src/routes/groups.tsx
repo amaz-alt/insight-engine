@@ -254,6 +254,22 @@ function GroupsPage() {
                 </div>
 
                 <div className="flex items-center gap-5">
+                  <Select
+                    aria-label="Folder"
+                    className="h-8 w-36 text-xs"
+                    value={g.folder_id ?? ""}
+                    onChange={(e) =>
+                      patch.mutate({ id: g.id, values: { folder_id: e.target.value || null } })
+                    }
+                  >
+                    <option value="">Unfiled</option>
+                    {(folders ?? []).map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.name}
+                      </option>
+                    ))}
+                  </Select>
+
                   <div className="flex items-center gap-2">
                     <span className="label-mono">scan</span>
                     <Toggle
