@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ContentRouteImport } from './routes/content'
 import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as InsightsIndexRouteImport } from './routes/insights.index'
 import { Route as InsightsIdRouteImport } from './routes/insights.$id'
@@ -33,6 +34,11 @@ const ContentRoute = ContentRouteImport.update({
 const GroupsRoute = GroupsRouteImport.update({
   id: '/groups',
   path: '/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KnowledgeRoute = KnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScheduleRoute = ScheduleRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/content': typeof ContentRoute
   '/groups': typeof GroupsRoute
+  '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/content': typeof ContentRoute
   '/groups': typeof GroupsRoute
+  '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights': typeof InsightsIndexRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/content': typeof ContentRoute
   '/groups': typeof GroupsRoute
+  '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/'
     | '/content'
     | '/groups'
+    | '/knowledge'
     | '/schedule'
     | '/insights/$id'
     | '/insights/'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/'
     | '/content'
     | '/groups'
+    | '/knowledge'
     | '/schedule'
     | '/insights/$id'
     | '/insights'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/content'
     | '/groups'
+    | '/knowledge'
     | '/schedule'
     | '/insights/$id'
     | '/insights/'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContentRoute: typeof ContentRoute
   GroupsRoute: typeof GroupsRoute
+  KnowledgeRoute: typeof KnowledgeRoute
   ScheduleRoute: typeof ScheduleRoute
   InsightsIdRoute: typeof InsightsIdRoute
   InsightsIndexRoute: typeof InsightsIndexRoute
@@ -182,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/groups'
       fullPath: '/groups'
       preLoaderRoute: typeof GroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/knowledge': {
+      id: '/knowledge'
+      path: '/knowledge'
+      fullPath: '/knowledge'
+      preLoaderRoute: typeof KnowledgeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/schedule': {
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContentRoute: ContentRoute,
   GroupsRoute: GroupsRoute,
+  KnowledgeRoute: KnowledgeRoute,
   ScheduleRoute: ScheduleRoute,
   InsightsIdRoute: InsightsIdRoute,
   InsightsIndexRoute: InsightsIndexRoute,
