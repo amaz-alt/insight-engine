@@ -1,18 +1,9 @@
 import { createHash } from "crypto";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Database } from "@/integrations/supabase/types";
 
-export type Settings = {
-  worker_token: string;
-  session_status: string;
-  daily_post_limit: number;
-  min_delay_seconds: number;
-  max_delay_seconds: number;
-  window_start_hour: number;
-  window_end_hour: number;
-  scan_interval_hours: number;
-  timezone: string;
-};
+export type Settings = Database["public"]["Tables"]["settings"]["Row"];
 
 export const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -27,19 +18,15 @@ export async function authorizeWorker(request: Request) {
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
     "";
 
-  const { data } = await supabaseAdmin
-    .from("settings")
-    .select(
-      "worker_token, session_status, daily_post_limit, min_delay_seconds, max_delay_seconds, window_start_hour, window_end_hour, scan_interval_hours, timezone",
-    )
-    .eq("id", true)
-    .single();
+  const { data } = await supabaseAdmin.from("settings").select("*").eq("id", true).single();
 
   if (!data) return { ok: false as const, response: json({ error: "not_configured" }, 503) };
 
   const a = Buffer.from(presented);
   const b = Buffer.from(data.worker_token);
-  const valid = a.length === b.length && createHash("sha256").update(a).digest("hex") === createHash("sha256").update(b).digest("hex");
+  const valid =
+    a.length === b.length &&
+    createHash("sha256").update(a).digest("hex") === createHash("sha256").update(b).digest("hex");
   if (!valid) return { ok: false as const, response: json({ error: "unauthorized" }, 401) };
 
   return { ok: true as const, settings: data as Settings };
@@ -49,6 +36,14 @@ export const fingerprint = (groupId: string, content: string) =>
   createHash("sha256")
     .update(`${groupId}::${content.replace(/\s+/g, " ").trim().toLowerCase()}`)
     .digest("hex");
+
+/** True when the current hour falls inside the configured quiet hours. */
+export function inQuietHours(settings: Settings, now = new Date()) {
+  const hour = now.getUTCHours();
+  const { quiet_hours_start: start, quiet_hours_end: end } = settings;
+  if (start === end) return false;
+  return start < end ? hour >= start && hour < end : hour >= start || hour < end;
+}
 
 export async function log(
   kind: string,

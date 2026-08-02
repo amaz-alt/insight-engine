@@ -15,6 +15,7 @@ import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as WorkerRouteImport } from './routes/worker'
 import { Route as InsightsIndexRouteImport } from './routes/insights.index'
 import { Route as InsightsIdRouteImport } from './routes/insights.$id'
 import { Route as ApiPublicCronAiCycleRouteImport } from './routes/api/public/cron/ai-cycle'
@@ -51,6 +52,11 @@ const ScheduleRoute = ScheduleRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkerRoute = WorkerRouteImport.update({
+  id: '/worker',
+  path: '/worker',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsightsIndexRoute = InsightsIndexRouteImport.update({
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
   '/settings': typeof SettingsRoute
+  '/worker': typeof WorkerRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
   '/api/public/cron/ai-cycle': typeof ApiPublicCronAiCycleRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
   '/settings': typeof SettingsRoute
+  '/worker': typeof WorkerRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights': typeof InsightsIndexRoute
   '/api/public/cron/ai-cycle': typeof ApiPublicCronAiCycleRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
   '/settings': typeof SettingsRoute
+  '/worker': typeof WorkerRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
   '/api/public/cron/ai-cycle': typeof ApiPublicCronAiCycleRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/schedule'
     | '/settings'
+    | '/worker'
     | '/insights/$id'
     | '/insights/'
     | '/api/public/cron/ai-cycle'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/schedule'
     | '/settings'
+    | '/worker'
     | '/insights/$id'
     | '/insights'
     | '/api/public/cron/ai-cycle'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/schedule'
     | '/settings'
+    | '/worker'
     | '/insights/$id'
     | '/insights/'
     | '/api/public/cron/ai-cycle'
@@ -191,6 +203,7 @@ export interface RootRouteChildren {
   KnowledgeRoute: typeof KnowledgeRoute
   ScheduleRoute: typeof ScheduleRoute
   SettingsRoute: typeof SettingsRoute
+  WorkerRoute: typeof WorkerRoute
   InsightsIdRoute: typeof InsightsIdRoute
   InsightsIndexRoute: typeof InsightsIndexRoute
   ApiPublicCronAiCycleRoute: typeof ApiPublicCronAiCycleRoute
@@ -242,6 +255,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/worker': {
+      id: '/worker'
+      path: '/worker'
+      fullPath: '/worker'
+      preLoaderRoute: typeof WorkerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insights/': {
@@ -303,6 +323,7 @@ const rootRouteChildren: RootRouteChildren = {
   KnowledgeRoute: KnowledgeRoute,
   ScheduleRoute: ScheduleRoute,
   SettingsRoute: SettingsRoute,
+  WorkerRoute: WorkerRoute,
   InsightsIdRoute: InsightsIdRoute,
   InsightsIndexRoute: InsightsIndexRoute,
   ApiPublicCronAiCycleRoute: ApiPublicCronAiCycleRoute,

@@ -24,3 +24,15 @@ export const generateContent = createServerFn({ method: "POST" })
     const { generateContentFor } = await import("./ai.server");
     return generateContentFor(data);
   });
+
+/** Regenerate the hook or the body of a single existing piece. */
+export const regenerateSection = createServerFn({ method: "POST" })
+  .inputValidator((input: { pieceId: string; section?: string; instruction?: string }) => ({
+    pieceId: z.string().uuid().parse(input.pieceId),
+    section: input.section === "hook" ? ("hook" as const) : ("body" as const),
+    instruction: (input.instruction ?? "").slice(0, 500),
+  }))
+  .handler(async ({ data }) => {
+    const { rewriteContentPiece } = await import("./ai.server");
+    return rewriteContentPiece(data);
+  });

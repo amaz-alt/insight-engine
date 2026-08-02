@@ -262,3 +262,60 @@ ${(sourcePosts ?? []).map((r) => (r.posts as { content: string } | null)?.conten
 
   return { created: created?.length ?? 0 };
 }
+
+/** Rewrite one existing content piece (whole body or a single section). */
+export async function rewriteContentPiece(input: {
+  pieceId: string;
+  instruction: string;
+  section: "hook" | "body";
+}) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const { data: piece, error } = await supabaseAdmin
+    .from("content_pieces")
+    .select("id, kind, hook, body, opportunities(title, pain_point, audience, niche)")
+    .eq("id", input.pieceId)
+    .single();
+  if (error || !piece) throw new Error("Content piece not found");
+
+  const opp = piece.opportunities as {
+    title: string;
+    pain_point: string | null;
+    audience: string | null;
+    niche: string | null;
+  } | null;
+
+  const output = await runStructured(
+    z.object({ hook: z.string(), body: z.string() }),
+    "You rewrite Facebook group posts so they sound like a real person. No emoji walls, no hashtag spam, no 'Are you struggling with…' openers. Keep the body under 1400 characters. Return both hook and body, even when only one was asked for — leave the other close to the original.",
+    `Format: ${piece.kind}
+Opportunity: ${opp?.title ?? "unknown"} — ${opp?.pain_point ?? ""}
+Audience: ${opp?.audience ?? "mixed"} in ${opp?.niche ?? "general"}
+
+Current hook: ${piece.hook ?? "(none)"}
+Current body:
+${piece.body}
+
+Rewrite the ${input.section}. Instruction: ${input.instruction || "make it sharper and more specific"}`,
+  );
+  if (!output) throw new Error("AI returned nothing usable");
+
+  const values =
+    input.section === "hook"
+      ? { hook: output.hook.slice(0, 240) }
+      : { body: output.body.slice(0, 4000) };
+
+  const { error: updateError } = await supabaseAdmin
+    .from("content_pieces")
+    .update(values)
+    .eq("id", piece.id);
+  if (updateError) throw new Error(updateError.message);
+
+  await supabaseAdmin.from("activity_log").insert({
+    kind: "content",
+    level: "info",
+    message: `Regenerated the ${input.section} of a ${piece.kind.replace(/_/g, " ")}`,
+  });
+
+  return { hook: output.hook, body: output.body, section: input.section };
+}

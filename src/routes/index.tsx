@@ -4,7 +4,18 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowUpRight, Radar, Sparkle } from "lucide-react";
 import { toast } from "sonner";
 
-import { Badge, Button, Loading, Metric, Panel, PanelHeader, relativeTime } from "@/components/ui-kit";
+import {
+  Badge,
+  Button,
+  Loading,
+  Metric,
+  Panel,
+  PanelHeader,
+  ProgressBar,
+  StatusDot,
+  Toggle,
+  relativeTime,
+} from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeNewPosts, rebuildOpportunities } from "@/lib/ai.functions";
 
@@ -33,47 +44,71 @@ const startOfToday = () => {
   return d.toISOString();
 };
 
+const ONLINE_WINDOW_MS = 10 * 60_000;
+
 function Dashboard() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const analyze = useServerFn(analyzeNewPosts);
   const rebuild = useServerFn(rebuildOpportunities);
 
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase.from("settings").select("*").eq("id", true).maybeSingle();
+      return data;
+    },
+  });
+
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats"],
+    refetchInterval: 60_000,
     queryFn: async () => {
       const today = startOfToday();
-      const [scans, opportunities, scheduled, published, awaiting, unanalysed] = await Promise.all([
+      const [
+        groups,
+        scannedToday,
+        discussions,
+        opportunities,
+        drafts,
+        scheduled,
+        published,
+        failedJobs,
+        unanalysed,
+      ] = await Promise.all([
+        supabase.from("groups").select("id", { count: "exact", head: true }).eq("enabled", true),
         supabase
-          .from("activity_log")
+          .from("groups")
           .select("id", { count: "exact", head: true })
-          .eq("kind", "scan")
-          .gte("created_at", today),
+          .gte("last_scanned_at", today),
+        supabase.from("posts").select("id", { count: "exact", head: true }).gte("scraped_at", today),
         supabase
           .from("opportunities")
           .select("id", { count: "exact", head: true })
           .gte("created_at", today),
+        supabase.from("content_pieces").select("id", { count: "exact", head: true }).eq("status", "draft"),
         supabase
           .from("scheduled_posts")
           .select("id", { count: "exact", head: true })
-          .eq("status", "pending"),
+          .in("status", ["scheduled", "publishing"]),
         supabase
           .from("scheduled_posts")
           .select("id", { count: "exact", head: true })
           .eq("status", "published")
           .gte("published_at", today),
-        supabase
-          .from("content_pieces")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "draft"),
+        supabase.from("worker_jobs").select("id", { count: "exact", head: true }).eq("status", "failed"),
         supabase.from("posts").select("id", { count: "exact", head: true }).is("analyzed_at", null),
       ]);
       return {
-        scans: scans.count ?? 0,
+        groups: groups.count ?? 0,
+        scannedToday: scannedToday.count ?? 0,
+        discussions: discussions.count ?? 0,
         opportunities: opportunities.count ?? 0,
+        drafts: drafts.count ?? 0,
         scheduled: scheduled.count ?? 0,
         published: published.count ?? 0,
-        awaiting: awaiting.count ?? 0,
+        failedJobs: failedJobs.count ?? 0,
         unanalysed: unanalysed.count ?? 0,
       };
     },
@@ -107,6 +142,7 @@ function Dashboard() {
 
   const { data: activity, isPending: activityPending } = useQuery({
     queryKey: ["dashboard-activity"],
+    refetchInterval: 60_000,
     queryFn: async () => {
       const { data } = await supabase
         .from("activity_log")
@@ -130,7 +166,8 @@ function Dashboard() {
       queryClient.invalidateQueries();
       router.invalidate();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) =>
+      toast.error(error.message, { description: "Nothing was changed — you can safely retry." }),
   });
 
   const approve = useMutation({
@@ -148,14 +185,37 @@ function Dashboard() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const setAutoPublish = useMutation({
+    mutationFn: async (next: boolean) => {
+      const { error } = await supabase.from("settings").update({ auto_publish: next }).eq("id", true);
+      if (error) throw new Error(error.message);
+      await supabase.from("activity_log").insert({
+        kind: "worker",
+        level: next ? "warning" : "info",
+        message: next
+          ? "Auto publish turned ON — approved-by-AI drafts can go live without you"
+          : "Auto publish turned OFF — review mode is active",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success("Review mode updated");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const online = settings?.last_heartbeat_at
+    ? Date.now() - new Date(settings.last_heartbeat_at).getTime() < ONLINE_WINDOW_MS
+    : false;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="label-mono">daily briefing</p>
           <h1 className="mt-1 text-2xl font-semibold">
-            {stats?.awaiting
-              ? `${stats.awaiting} piece${stats.awaiting === 1 ? "" : "s"} waiting on you`
+            {stats?.drafts
+              ? `${stats.drafts} piece${stats.drafts === 1 ? "" : "s"} waiting on you`
               : "Nothing needs you right now"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -173,11 +233,59 @@ function Dashboard() {
         </Button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label="scans today" value={stats?.scans ?? 0} sub={`${stats?.unanalysed ?? 0} posts pending AI`} />
+      {runCycle.isPending ? (
+        <Panel className="px-5 py-4">
+          <ProgressBar label="analysing discussions, then re-ranking demand — this can take a minute" />
+        </Panel>
+      ) : null}
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <Metric label="groups monitored" value={stats?.groups ?? 0} sub={`${stats?.scannedToday ?? 0} scanned today`} />
+        <Metric label="new discussions" value={stats?.discussions ?? 0} sub={`${stats?.unanalysed ?? 0} pending AI`} />
         <Metric label="new opportunities" value={stats?.opportunities ?? 0} tone="primary" sub="discovered today" />
+        <Metric label="ai drafts" value={stats?.drafts ?? 0} sub="awaiting approval" />
         <Metric label="scheduled" value={stats?.scheduled ?? 0} sub="queued for the worker" />
         <Metric label="published today" value={stats?.published ?? 0} sub="live in groups" />
+        <Metric
+          label="failed jobs"
+          value={stats?.failedJobs ?? 0}
+          sub={stats?.failedJobs ? "retry on Worker" : "all clean"}
+        />
+        <Panel className="p-4">
+          <p className="label-mono">worker status</p>
+          <p className="mt-2 flex items-center gap-2 text-lg font-semibold">
+            <StatusDot tone={settings?.worker_paused ? "warning" : online ? "success" : "danger"} />
+            {settings?.worker_paused ? "Paused" : online ? "Online" : "Offline"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            heartbeat {relativeTime(settings?.last_heartbeat_at)}
+          </p>
+        </Panel>
+        <Panel className="p-4">
+          <p className="label-mono">last successful sync</p>
+          <p className="num mt-2 text-lg font-semibold">{relativeTime(settings?.last_sync_at)}</p>
+          <Link to="/worker" className="mt-1 inline-block text-xs text-primary">
+            worker health →
+          </Link>
+        </Panel>
+        <Panel className="flex items-start justify-between gap-3 p-4">
+          <div>
+            <p className="label-mono">auto publish</p>
+            <p className="mt-2 text-lg font-semibold">
+              {settings?.auto_publish ? "On" : "Off — review mode"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {settings?.auto_publish
+                ? "Drafts can go live without approval"
+                : "Nothing publishes until you approve it"}
+            </p>
+          </div>
+          <Toggle
+            checked={settings?.auto_publish ?? false}
+            label="Auto publish"
+            onChange={(next) => setAutoPublish.mutate(next)}
+          />
+        </Panel>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.35fr_1fr]">
@@ -274,7 +382,17 @@ function Dashboard() {
         </div>
 
         <Panel className="self-start">
-          <PanelHeader title="Worker activity" hint="Every scan, publish and fault" />
+          <PanelHeader
+            title="Worker activity"
+            hint="Every scan, publish and fault"
+            action={
+              <Link to="/worker">
+                <Button size="sm" variant="ghost">
+                  Health <ArrowUpRight />
+                </Button>
+              </Link>
+            }
+          />
           {activityPending ? (
             <Loading rows={5} />
           ) : (
