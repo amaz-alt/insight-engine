@@ -33,7 +33,7 @@ export const Route = createFileRoute("/diagnostics")({
       },
     ],
   }),
-  component: DiagnosticsPage;
+  component: DiagnosticsPage,
 });
 
 type Status = "pass" | "warn" | "fail";
