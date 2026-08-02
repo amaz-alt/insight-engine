@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { authorizeWorker, json } from "@/lib/worker.server";
+import { authorizeWorker, inQuietHours, json, log } from "@/lib/worker.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const randomBetween = (min: number, max: number) =>
@@ -8,8 +8,8 @@ const randomBetween = (min: number, max: number) =>
 
 /**
  * The worker polls this for its next batch of browser actions.
- * Due scan and publish work is queued here, then handed out in a
- * deliberately shuffled order with human-like delays attached.
+ * Due scan and publish work is queued here inside the configured safety
+ * limits, then handed out shuffled with human-like delays attached.
  */
 export const Route = createFileRoute("/api/public/worker/jobs")({
   server: {
@@ -20,6 +20,22 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
         const s = auth.settings;
         const now = new Date();
 
+        if (s.worker_paused) {
+          return json({ jobs: [], paused: true, reason: "worker paused from the app" });
+        }
+
+        // ── Safety limit: scans per hour ────────────────────────────────
+        const hourAgo = new Date(now.getTime() - 3600_000).toISOString();
+        const scansThisHour = await supabaseAdmin
+          .from("worker_jobs")
+          .select("id", { count: "exact", head: true })
+          .eq("type", "scan_group")
+          .gte("claimed_at", hourAgo);
+        const scanBudget = Math.max(
+          0,
+          Math.min(s.scans_per_hour - (scansThisHour.count ?? 0), s.max_groups_per_cycle),
+        );
+
         // 1. Queue scans for enabled groups that are past their scan interval.
         const staleBefore = new Date(
           now.getTime() - s.scan_interval_hours * 3600_000,
@@ -28,7 +44,9 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
           .from("groups")
           .select("id, name, url, last_scanned_at")
           .eq("enabled", true)
-          .or(`last_scanned_at.is.null,last_scanned_at.lt.${staleBefore}`);
+          .or(`last_scanned_at.is.null,last_scanned_at.lt.${staleBefore}`)
+          .order("last_scanned_at", { ascending: true, nullsFirst: true })
+          .limit(Math.max(0, scanBudget));
 
         for (const g of staleGroups ?? []) {
           const { data: existing } = await supabaseAdmin
@@ -48,12 +66,17 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
         }
 
         // 2. Queue publishes for scheduled posts that are due.
-        const { data: due } = await supabaseAdmin
-          .from("scheduled_posts")
-          .select("id, group_id, content_piece_id, groups(name, url, can_post), content_pieces(body)")
-          .eq("status", "pending")
-          .lte("scheduled_for", now.toISOString())
-          .limit(10);
+        const quiet = inQuietHours(s, now);
+        const { data: due } = quiet
+          ? { data: [] as never[] }
+          : await supabaseAdmin
+              .from("scheduled_posts")
+              .select(
+                "id, group_id, content_piece_id, groups(name, url, can_post), content_pieces(body, status)",
+              )
+              .eq("status", "scheduled")
+              .lte("scheduled_for", now.toISOString())
+              .limit(10);
 
         const publishedToday = await supabaseAdmin
           .from("scheduled_posts")
@@ -64,6 +87,8 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
 
         for (const item of due ?? []) {
           const group = item.groups as { name: string; url: string; can_post: boolean } | null;
+          const piece = item.content_pieces as { body: string; status: string } | null;
+
           if (!group?.can_post) {
             await supabaseAdmin
               .from("scheduled_posts")
@@ -71,6 +96,17 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
               .eq("id", item.id);
             continue;
           }
+
+          // Review mode: nothing unapproved ever reaches Facebook.
+          if (!s.auto_publish && piece?.status === "draft") {
+            await supabaseAdmin
+              .from("scheduled_posts")
+              .update({ status: "draft", error: "Waiting for your approval" })
+              .eq("id", item.id);
+            await log("publish", "warning", "Held a post back — content is not approved yet", item.group_id);
+            continue;
+          }
+
           if (budget <= 0) break;
           budget -= 1;
 
@@ -81,12 +117,12 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
               scheduled_post_id: item.id,
               group_id: item.group_id,
               url: group.url,
-              body: (item.content_pieces as { body: string } | null)?.body ?? "",
+              body: piece?.body ?? "",
             },
           });
           await supabaseAdmin
             .from("scheduled_posts")
-            .update({ status: "claimed", claimed_at: now.toISOString() })
+            .update({ status: "publishing", claimed_at: now.toISOString() })
             .eq("id", item.id);
         }
 
@@ -110,6 +146,11 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             );
         }
 
+        await supabaseAdmin
+          .from("settings")
+          .update({ last_sync_at: now.toISOString() })
+          .eq("id", true);
+
         return json({
           jobs: batch.map((job) => ({
             ...job,
@@ -118,10 +159,18 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
           behaviour: {
             window_start_hour: s.window_start_hour,
             window_end_hour: s.window_end_hour,
+            quiet_hours_start: s.quiet_hours_start,
+            quiet_hours_end: s.quiet_hours_end,
+            in_quiet_hours: quiet,
             timezone: s.timezone,
             min_delay_seconds: s.min_delay_seconds,
             max_delay_seconds: s.max_delay_seconds,
+            randomization_window_minutes: s.randomization_window_minutes,
+            scans_per_hour: s.scans_per_hour,
+            max_groups_per_cycle: s.max_groups_per_cycle,
+            scan_budget_left: scanBudget,
             daily_post_budget_left: budget,
+            auto_publish: s.auto_publish,
           },
         });
       },

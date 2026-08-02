@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Wand2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -11,10 +12,12 @@ import {
   Panel,
   PanelHeader,
   ScoreBar,
+  TrendBars,
   relativeTime,
 } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
 import { generateContent } from "@/lib/ai.functions";
+
 
 export const Route = createFileRoute("/insights/$id")({
   head: () => ({
@@ -37,10 +40,36 @@ export const Route = createFileRoute("/insights/$id")({
 
 type ProductIdea = { name?: string; format?: string; why?: string };
 
+const WINDOWS = [7, 30, 90] as const;
+
+function bucketise(dates: (string | null)[], days: number) {
+  const buckets = days <= 7 ? 7 : days <= 30 ? 15 : 18;
+  const span = (days * 86_400_000) / buckets;
+  const start = Date.now() - days * 86_400_000;
+  const points = Array.from({ length: buckets }, () => 0);
+  for (const d of dates) {
+    if (!d) continue;
+    const t = new Date(d).getTime();
+    if (t < start) continue;
+    const i = Math.min(buckets - 1, Math.floor((t - start) / span));
+    points[i] = (points[i] ?? 0) + 1;
+  }
+  return points;
+}
+
+function changePct(points: number[]) {
+  const half = Math.floor(points.length / 2);
+  const older = points.slice(0, half).reduce((a, b) => a + b, 0);
+  const recent = points.slice(half).reduce((a, b) => a + b, 0);
+  if (!older) return recent ? 100 : 0;
+  return Math.round(((recent - older) / older) * 100);
+}
+
 function OpportunityDetail() {
   const { id } = Route.useParams();
   const queryClient = useQueryClient();
   const generate = useServerFn(generateContent);
+  const [days, setDays] = useState<number>(30);
 
   const { data: opportunity, isPending } = useQuery({
     queryKey: ["opportunity", id],
@@ -54,14 +83,18 @@ function OpportunityDetail() {
   const { data: evidence } = useQuery({
     queryKey: ["opportunity-evidence", id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("opportunity_posts")
-        .select("posts(id, content, author_name, reactions, comments_count, posted_at, permalink, groups(name))")
+        .select(
+          "posts(id, content, author_name, reactions, comments_count, posted_at, scraped_at, permalink, groups(name))",
+        )
         .eq("opportunity_id", id)
-        .limit(12);
+        .limit(200);
+      if (error) throw new Error(error.message);
       return (data ?? []).map((row) => row.posts).filter(Boolean);
     },
   });
+
 
   const { data: content } = useQuery({
     queryKey: ["opportunity-content", id],
@@ -154,9 +187,62 @@ function OpportunityDetail() {
           </Panel>
 
           <Panel>
-            <PanelHeader title="Evidence" hint={`${evidence?.length ?? 0} discussions in this cluster`} />
+            <PanelHeader
+              title="Demand over time"
+              hint="how often this problem resurfaces"
+              action={
+                <div className="flex gap-1">
+                  {WINDOWS.map((w) => (
+                    <Button
+                      key={w}
+                      size="sm"
+                      variant={days === w ? "primary" : "ghost"}
+                      onClick={() => setDays(w)}
+                    >
+                      {w}d
+                    </Button>
+                  ))}
+                </div>
+              }
+            />
+            {(() => {
+              const dates = (evidence ?? []).map((p) => p!.posted_at ?? p!.scraped_at);
+              const points = bucketise(dates, days);
+              const change = changePct(points);
+              const engagement = (evidence ?? []).reduce(
+                (sum, p) => sum + p!.reactions + p!.comments_count * 2,
+                0,
+              );
+              return (
+                <div className="space-y-3 p-5">
+                  <TrendBars
+                    points={points}
+                    labels={[`${days}d ago`, ...Array(Math.max(0, points.length - 2)).fill(""), "today"]}
+                    height={80}
+                  />
+                  <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                    <span>
+                      {points.reduce((a, b) => a + b, 0)} threads in window
+                    </span>
+                    <span className={change >= 0 ? "text-success" : "text-warning"}>
+                      {change >= 0 ? "+" : ""}
+                      {change}% frequency change
+                    </span>
+                    <span>{engagement} engagement points</span>
+                    <span>confidence {opportunity.confidence}%</span>
+                  </div>
+                </div>
+              );
+            })()}
+          </Panel>
+
+          <Panel>
+            <PanelHeader
+              title="Original discussions"
+              hint={`${evidence?.length ?? 0} threads generated this insight`}
+            />
             <ul className="divide-y divide-border">
-              {(evidence ?? []).map((post) => (
+              {(evidence ?? []).slice(0, 25).map((post) => (
                 <li key={post!.id} className="px-5 py-4">
                   <p className="label-mono">
                     {(post!.groups as { name: string } | null)?.name ?? "unknown group"} ·{" "}
@@ -168,6 +254,16 @@ function OpportunityDetail() {
                   <p className="label-mono mt-2">
                     {post!.reactions} reactions · {post!.comments_count} comments
                   </p>
+                  {post!.permalink ? (
+                    <a
+                      href={post!.permalink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="label-mono mt-2 inline-block text-primary"
+                    >
+                      open the original on facebook →
+                    </a>
+                  ) : null}
                 </li>
               ))}
               {!evidence?.length ? (
@@ -177,6 +273,7 @@ function OpportunityDetail() {
               ) : null}
             </ul>
           </Panel>
+
         </div>
 
         <div className="space-y-4">

@@ -259,3 +259,90 @@ export function relativeTime(value?: string | null) {
   if (hours < 24) return `${hours}h ago`;
   return `${Math.round(hours / 24)}d ago`;
 }
+
+/* ── Status dot ───────────────────────────────────────────────────────── */
+
+export function StatusDot({ tone }: { tone: "success" | "warning" | "danger" | "neutral" }) {
+  return (
+    <span
+      className={cn(
+        "inline-block size-2 shrink-0 rounded-full",
+        tone === "success" && "bg-success shadow-[0_0_8px] shadow-success/60",
+        tone === "warning" && "bg-warning",
+        tone === "danger" && "bg-destructive",
+        tone === "neutral" && "bg-muted-foreground/50",
+      )}
+    />
+  );
+}
+
+/* ── Trend bars (tiny inline chart) ───────────────────────────────────── */
+
+export function TrendBars({
+  points,
+  labels,
+  height = 64,
+}: {
+  points: number[];
+  labels?: string[];
+  height?: number;
+}) {
+  const max = Math.max(1, ...points);
+  return (
+    <div className="w-full">
+      <div className="flex items-end gap-[3px]" style={{ height }}>
+        {points.map((p, i) => (
+          <div
+            key={i}
+            title={labels?.[i] ? `${labels[i]}: ${p}` : String(p)}
+            className="flex-1 rounded-sm bg-primary/70 transition-all hover:bg-primary"
+            style={{ height: `${Math.max(2, (p / max) * 100)}%` }}
+          />
+        ))}
+      </div>
+      {labels?.length ? (
+        <div className="mt-1.5 flex justify-between">
+          <span className="label-mono">{labels[0]}</span>
+          <span className="label-mono">{labels[labels.length - 1]}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ── Error state ─────────────────────────────────────────────────────── */
+
+export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+      <p className="label-mono text-destructive">could not load</p>
+      <p className="max-w-sm text-sm text-muted-foreground">{message}</p>
+      {onRetry ? (
+        <Button size="sm" onClick={onRetry}>
+          Retry
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+export function ProgressBar({ label }: { label: string }) {
+  return (
+    <div className="space-y-1.5">
+      <p className="label-mono">{label}</p>
+      <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
+        <div className="h-full w-1/3 animate-[shimmer_1.2s_ease-in-out_infinite] rounded-full bg-primary" />
+      </div>
+    </div>
+  );
+}
+
+export function formatDateTime(value?: string | null) {
+  if (!value) return "never";
+  return new Date(value).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

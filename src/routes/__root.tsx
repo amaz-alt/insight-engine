@@ -11,6 +11,7 @@ import {
   Activity,
   BrainCircuit,
   CalendarClock,
+  HeartPulse,
   LayoutDashboard,
   Library,
   PenLine,
@@ -134,6 +135,7 @@ const NAV = [
   { to: "/content", label: "Content", icon: PenLine },
   { to: "/schedule", label: "Schedule", icon: CalendarClock },
   { to: "/knowledge", label: "Knowledge", icon: Library },
+  { to: "/worker", label: "Worker", icon: HeartPulse },
   { to: "/settings", label: "Settings", icon: Settings2 },
 ] as const;
 

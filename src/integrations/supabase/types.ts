@@ -96,6 +96,36 @@ export type Database = {
           },
         ]
       }
+      content_templates: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       folders: {
         Row: {
           color: string
@@ -452,52 +482,100 @@ export type Database = {
       }
       settings: {
         Row: {
+          auto_publish: boolean
+          chrome_status: string
           created_at: string
           daily_post_limit: number
           fb_account_name: string | null
           id: boolean
           last_heartbeat_at: string | null
+          last_publish_at: string | null
+          last_scan_at: string | null
+          last_sync_at: string | null
           max_delay_seconds: number
+          max_groups_per_cycle: number
           min_delay_seconds: number
+          pending_command: string | null
+          pending_command_at: string | null
+          quiet_hours_end: number
+          quiet_hours_start: number
+          randomization_window_minutes: number
           scan_interval_hours: number
+          scans_per_hour: number
+          session_expires_at: string | null
           session_status: string
+          session_validated_at: string | null
           timezone: string
           updated_at: string
           window_end_hour: number
           window_start_hour: number
+          worker_paused: boolean
           worker_token: string
+          worker_version: string | null
         }
         Insert: {
+          auto_publish?: boolean
+          chrome_status?: string
           created_at?: string
           daily_post_limit?: number
           fb_account_name?: string | null
           id?: boolean
           last_heartbeat_at?: string | null
+          last_publish_at?: string | null
+          last_scan_at?: string | null
+          last_sync_at?: string | null
           max_delay_seconds?: number
+          max_groups_per_cycle?: number
           min_delay_seconds?: number
+          pending_command?: string | null
+          pending_command_at?: string | null
+          quiet_hours_end?: number
+          quiet_hours_start?: number
+          randomization_window_minutes?: number
           scan_interval_hours?: number
+          scans_per_hour?: number
+          session_expires_at?: string | null
           session_status?: string
+          session_validated_at?: string | null
           timezone?: string
           updated_at?: string
           window_end_hour?: number
           window_start_hour?: number
+          worker_paused?: boolean
           worker_token?: string
+          worker_version?: string | null
         }
         Update: {
+          auto_publish?: boolean
+          chrome_status?: string
           created_at?: string
           daily_post_limit?: number
           fb_account_name?: string | null
           id?: boolean
           last_heartbeat_at?: string | null
+          last_publish_at?: string | null
+          last_scan_at?: string | null
+          last_sync_at?: string | null
           max_delay_seconds?: number
+          max_groups_per_cycle?: number
           min_delay_seconds?: number
+          pending_command?: string | null
+          pending_command_at?: string | null
+          quiet_hours_end?: number
+          quiet_hours_start?: number
+          randomization_window_minutes?: number
           scan_interval_hours?: number
+          scans_per_hour?: number
+          session_expires_at?: string | null
           session_status?: string
+          session_validated_at?: string | null
           timezone?: string
           updated_at?: string
           window_end_hour?: number
           window_start_hour?: number
+          worker_paused?: boolean
           worker_token?: string
+          worker_version?: string | null
         }
         Relationships: []
       }
