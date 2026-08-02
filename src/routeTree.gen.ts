@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as InsightsIndexRouteImport } from './routes/insights.index'
 import { Route as ApiPublicWorkerCompleteRouteImport } from './routes/api/public/worker/complete'
 import { Route as ApiPublicWorkerHeartbeatRouteImport } from './routes/api/public/worker/heartbeat'
 import { Route as ApiPublicWorkerIngestRouteImport } from './routes/api/public/worker/ingest'
@@ -24,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 const GroupsRoute = GroupsRouteImport.update({
   id: '/groups',
   path: '/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsightsIndexRoute = InsightsIndexRouteImport.update({
+  id: '/insights/',
+  path: '/insights/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicWorkerCompleteRoute = ApiPublicWorkerCompleteRouteImport.update({
@@ -51,6 +57,7 @@ const ApiPublicWorkerJobsRoute = ApiPublicWorkerJobsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/groups': typeof GroupsRoute
+  '/insights/': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
   '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/groups': typeof GroupsRoute
+  '/insights': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
   '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/groups': typeof GroupsRoute
+  '/insights/': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
   '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/groups'
+    | '/insights/'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
     | '/api/public/worker/ingest'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/groups'
+    | '/insights'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
     | '/api/public/worker/ingest'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/groups'
+    | '/insights/'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
     | '/api/public/worker/ingest'
@@ -103,6 +115,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GroupsRoute: typeof GroupsRoute
+  InsightsIndexRoute: typeof InsightsIndexRoute
   ApiPublicWorkerCompleteRoute: typeof ApiPublicWorkerCompleteRoute
   ApiPublicWorkerHeartbeatRoute: typeof ApiPublicWorkerHeartbeatRoute
   ApiPublicWorkerIngestRoute: typeof ApiPublicWorkerIngestRoute
@@ -123,6 +136,13 @@ declare module '@tanstack/react-router' {
       path: '/groups'
       fullPath: '/groups'
       preLoaderRoute: typeof GroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights/': {
+      id: '/insights/'
+      path: '/insights'
+      fullPath: '/insights/'
+      preLoaderRoute: typeof InsightsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/worker/complete': {
@@ -159,6 +179,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GroupsRoute: GroupsRoute,
+  InsightsIndexRoute: InsightsIndexRoute,
   ApiPublicWorkerCompleteRoute: ApiPublicWorkerCompleteRoute,
   ApiPublicWorkerHeartbeatRoute: ApiPublicWorkerHeartbeatRoute,
   ApiPublicWorkerIngestRoute: ApiPublicWorkerIngestRoute,

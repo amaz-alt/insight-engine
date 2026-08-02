@@ -14,7 +14,7 @@ import {
 } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/insights")({
+export const Route = createFileRoute("/insights/")({
   head: () => ({
     meta: [
       { title: "Demand Signals — Facebook Growth OS" },
@@ -104,7 +104,7 @@ function InsightsPage() {
         ) : rows.length === 0 ? (
           <EmptyState
             title="No demand signals yet"
-            description="Run an AI cycle from the dashboard once the worker has scraped some discussions."
+            body="Run an AI cycle from the dashboard once the worker has scraped some discussions."
           />
         ) : (
           <ul className="divide-y divide-border">
