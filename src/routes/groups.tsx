@@ -67,6 +67,35 @@ function GroupsPage() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["groups"] });
 
+  const addFolder = useMutation({
+    mutationFn: async () => {
+      if (!newFolder.trim()) throw new Error("Give the folder a name");
+      const { error } = await supabase.from("folders").insert({ name: newFolder.trim() });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      setNewFolder("");
+      toast.success("Folder created");
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const removeFolder = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("groups").update({ folder_id: null }).eq("folder_id", id);
+      const { error } = await supabase.from("folders").delete().eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Folder deleted — its groups are now unfiled");
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
+      invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+
   const addGroup = useMutation({
     mutationFn: async () => {
       if (!name.trim() || !url.trim()) throw new Error("Name and group URL are both required");
