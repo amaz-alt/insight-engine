@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicWorkerCompleteRouteImport } from './routes/api/public/worker/complete'
 import { Route as ApiPublicWorkerHeartbeatRouteImport } from './routes/api/public/worker/heartbeat'
 import { Route as ApiPublicWorkerIngestRouteImport } from './routes/api/public/worker/ingest'
 import { Route as ApiPublicWorkerJobsRouteImport } from './routes/api/public/worker/jobs'
@@ -17,6 +18,11 @@ import { Route as ApiPublicWorkerJobsRouteImport } from './routes/api/public/wor
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWorkerCompleteRoute = ApiPublicWorkerCompleteRouteImport.update({
+  id: '/api/public/worker/complete',
+  path: '/api/public/worker/complete',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicWorkerHeartbeatRoute =
@@ -38,12 +44,14 @@ const ApiPublicWorkerJobsRoute = ApiPublicWorkerJobsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
   '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
   '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
   '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
   '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
@@ -51,6 +59,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
   '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
   '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
@@ -59,18 +68,21 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
     | '/api/public/worker/ingest'
     | '/api/public/worker/jobs'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
     | '/api/public/worker/ingest'
     | '/api/public/worker/jobs'
   id:
     | '__root__'
     | '/'
+    | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
     | '/api/public/worker/ingest'
     | '/api/public/worker/jobs'
@@ -78,6 +90,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicWorkerCompleteRoute: typeof ApiPublicWorkerCompleteRoute
   ApiPublicWorkerHeartbeatRoute: typeof ApiPublicWorkerHeartbeatRoute
   ApiPublicWorkerIngestRoute: typeof ApiPublicWorkerIngestRoute
   ApiPublicWorkerJobsRoute: typeof ApiPublicWorkerJobsRoute
@@ -90,6 +103,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/worker/complete': {
+      id: '/api/public/worker/complete'
+      path: '/api/public/worker/complete'
+      fullPath: '/api/public/worker/complete'
+      preLoaderRoute: typeof ApiPublicWorkerCompleteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/worker/heartbeat': {
@@ -118,6 +138,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicWorkerCompleteRoute: ApiPublicWorkerCompleteRoute,
   ApiPublicWorkerHeartbeatRoute: ApiPublicWorkerHeartbeatRoute,
   ApiPublicWorkerIngestRoute: ApiPublicWorkerIngestRoute,
   ApiPublicWorkerJobsRoute: ApiPublicWorkerJobsRoute,
