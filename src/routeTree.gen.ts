@@ -10,33 +10,181 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ContentRouteImport } from './routes/content'
+import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as InsightsIndexRouteImport } from './routes/insights.index'
+import { Route as InsightsIdRouteImport } from './routes/insights.$id'
+import { Route as ApiPublicWorkerCompleteRouteImport } from './routes/api/public/worker/complete'
+import { Route as ApiPublicWorkerHeartbeatRouteImport } from './routes/api/public/worker/heartbeat'
+import { Route as ApiPublicWorkerIngestRouteImport } from './routes/api/public/worker/ingest'
+import { Route as ApiPublicWorkerJobsRouteImport } from './routes/api/public/worker/jobs'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContentRoute = ContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsRoute = GroupsRouteImport.update({
+  id: '/groups',
+  path: '/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KnowledgeRoute = KnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsightsIndexRoute = InsightsIndexRouteImport.update({
+  id: '/insights/',
+  path: '/insights/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsightsIdRoute = InsightsIdRouteImport.update({
+  id: '/insights/$id',
+  path: '/insights/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWorkerCompleteRoute = ApiPublicWorkerCompleteRouteImport.update({
+  id: '/api/public/worker/complete',
+  path: '/api/public/worker/complete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWorkerHeartbeatRoute =
+  ApiPublicWorkerHeartbeatRouteImport.update({
+    id: '/api/public/worker/heartbeat',
+    path: '/api/public/worker/heartbeat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWorkerIngestRoute = ApiPublicWorkerIngestRouteImport.update({
+  id: '/api/public/worker/ingest',
+  path: '/api/public/worker/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWorkerJobsRoute = ApiPublicWorkerJobsRouteImport.update({
+  id: '/api/public/worker/jobs',
+  path: '/api/public/worker/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/content': typeof ContentRoute
+  '/groups': typeof GroupsRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/schedule': typeof ScheduleRoute
+  '/settings': typeof SettingsRoute
+  '/insights/$id': typeof InsightsIdRoute
+  '/insights/': typeof InsightsIndexRoute
+  '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
+  '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
+  '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
+  '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/content': typeof ContentRoute
+  '/groups': typeof GroupsRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/schedule': typeof ScheduleRoute
+  '/settings': typeof SettingsRoute
+  '/insights/$id': typeof InsightsIdRoute
+  '/insights': typeof InsightsIndexRoute
+  '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
+  '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
+  '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
+  '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/content': typeof ContentRoute
+  '/groups': typeof GroupsRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/schedule': typeof ScheduleRoute
+  '/settings': typeof SettingsRoute
+  '/insights/$id': typeof InsightsIdRoute
+  '/insights/': typeof InsightsIndexRoute
+  '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
+  '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
+  '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
+  '/api/public/worker/jobs': typeof ApiPublicWorkerJobsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/content'
+    | '/groups'
+    | '/knowledge'
+    | '/schedule'
+    | '/settings'
+    | '/insights/$id'
+    | '/insights/'
+    | '/api/public/worker/complete'
+    | '/api/public/worker/heartbeat'
+    | '/api/public/worker/ingest'
+    | '/api/public/worker/jobs'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/content'
+    | '/groups'
+    | '/knowledge'
+    | '/schedule'
+    | '/settings'
+    | '/insights/$id'
+    | '/insights'
+    | '/api/public/worker/complete'
+    | '/api/public/worker/heartbeat'
+    | '/api/public/worker/ingest'
+    | '/api/public/worker/jobs'
+  id:
+    | '__root__'
+    | '/'
+    | '/content'
+    | '/groups'
+    | '/knowledge'
+    | '/schedule'
+    | '/settings'
+    | '/insights/$id'
+    | '/insights/'
+    | '/api/public/worker/complete'
+    | '/api/public/worker/heartbeat'
+    | '/api/public/worker/ingest'
+    | '/api/public/worker/jobs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ContentRoute: typeof ContentRoute
+  GroupsRoute: typeof GroupsRoute
+  KnowledgeRoute: typeof KnowledgeRoute
+  ScheduleRoute: typeof ScheduleRoute
+  SettingsRoute: typeof SettingsRoute
+  InsightsIdRoute: typeof InsightsIdRoute
+  InsightsIndexRoute: typeof InsightsIndexRoute
+  ApiPublicWorkerCompleteRoute: typeof ApiPublicWorkerCompleteRoute
+  ApiPublicWorkerHeartbeatRoute: typeof ApiPublicWorkerHeartbeatRoute
+  ApiPublicWorkerIngestRoute: typeof ApiPublicWorkerIngestRoute
+  ApiPublicWorkerJobsRoute: typeof ApiPublicWorkerJobsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +196,100 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/content': {
+      id: '/content'
+      path: '/content'
+      fullPath: '/content'
+      preLoaderRoute: typeof ContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups': {
+      id: '/groups'
+      path: '/groups'
+      fullPath: '/groups'
+      preLoaderRoute: typeof GroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/knowledge': {
+      id: '/knowledge'
+      path: '/knowledge'
+      fullPath: '/knowledge'
+      preLoaderRoute: typeof KnowledgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights/': {
+      id: '/insights/'
+      path: '/insights'
+      fullPath: '/insights/'
+      preLoaderRoute: typeof InsightsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights/$id': {
+      id: '/insights/$id'
+      path: '/insights/$id'
+      fullPath: '/insights/$id'
+      preLoaderRoute: typeof InsightsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/worker/complete': {
+      id: '/api/public/worker/complete'
+      path: '/api/public/worker/complete'
+      fullPath: '/api/public/worker/complete'
+      preLoaderRoute: typeof ApiPublicWorkerCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/worker/heartbeat': {
+      id: '/api/public/worker/heartbeat'
+      path: '/api/public/worker/heartbeat'
+      fullPath: '/api/public/worker/heartbeat'
+      preLoaderRoute: typeof ApiPublicWorkerHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/worker/ingest': {
+      id: '/api/public/worker/ingest'
+      path: '/api/public/worker/ingest'
+      fullPath: '/api/public/worker/ingest'
+      preLoaderRoute: typeof ApiPublicWorkerIngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/worker/jobs': {
+      id: '/api/public/worker/jobs'
+      path: '/api/public/worker/jobs'
+      fullPath: '/api/public/worker/jobs'
+      preLoaderRoute: typeof ApiPublicWorkerJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ContentRoute: ContentRoute,
+  GroupsRoute: GroupsRoute,
+  KnowledgeRoute: KnowledgeRoute,
+  ScheduleRoute: ScheduleRoute,
+  SettingsRoute: SettingsRoute,
+  InsightsIdRoute: InsightsIdRoute,
+  InsightsIndexRoute: InsightsIndexRoute,
+  ApiPublicWorkerCompleteRoute: ApiPublicWorkerCompleteRoute,
+  ApiPublicWorkerHeartbeatRoute: ApiPublicWorkerHeartbeatRoute,
+  ApiPublicWorkerIngestRoute: ApiPublicWorkerIngestRoute,
+  ApiPublicWorkerJobsRoute: ApiPublicWorkerJobsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
