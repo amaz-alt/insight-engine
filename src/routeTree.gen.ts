@@ -14,6 +14,7 @@ import { Route as ContentRouteImport } from './routes/content'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as InsightsIndexRouteImport } from './routes/insights.index'
 import { Route as InsightsIdRouteImport } from './routes/insights.$id'
 import { Route as ApiPublicWorkerCompleteRouteImport } from './routes/api/public/worker/complete'
@@ -44,6 +45,11 @@ const KnowledgeRoute = KnowledgeRouteImport.update({
 const ScheduleRoute = ScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsightsIndexRoute = InsightsIndexRouteImport.update({
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/groups': typeof GroupsRoute
   '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
+  '/settings': typeof SettingsRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/groups': typeof GroupsRoute
   '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
+  '/settings': typeof SettingsRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/groups': typeof GroupsRoute
   '/knowledge': typeof KnowledgeRoute
   '/schedule': typeof ScheduleRoute
+  '/settings': typeof SettingsRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/knowledge'
     | '/schedule'
+    | '/settings'
     | '/insights/$id'
     | '/insights/'
     | '/api/public/worker/complete'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/knowledge'
     | '/schedule'
+    | '/settings'
     | '/insights/$id'
     | '/insights'
     | '/api/public/worker/complete'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/knowledge'
     | '/schedule'
+    | '/settings'
     | '/insights/$id'
     | '/insights/'
     | '/api/public/worker/complete'
@@ -166,6 +178,7 @@ export interface RootRouteChildren {
   GroupsRoute: typeof GroupsRoute
   KnowledgeRoute: typeof KnowledgeRoute
   ScheduleRoute: typeof ScheduleRoute
+  SettingsRoute: typeof SettingsRoute
   InsightsIdRoute: typeof InsightsIdRoute
   InsightsIndexRoute: typeof InsightsIndexRoute
   ApiPublicWorkerCompleteRoute: typeof ApiPublicWorkerCompleteRoute
@@ -209,6 +222,13 @@ declare module '@tanstack/react-router' {
       path: '/schedule'
       fullPath: '/schedule'
       preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insights/': {
@@ -262,6 +282,7 @@ const rootRouteChildren: RootRouteChildren = {
   GroupsRoute: GroupsRoute,
   KnowledgeRoute: KnowledgeRoute,
   ScheduleRoute: ScheduleRoute,
+  SettingsRoute: SettingsRoute,
   InsightsIdRoute: InsightsIdRoute,
   InsightsIndexRoute: InsightsIndexRoute,
   ApiPublicWorkerCompleteRoute: ApiPublicWorkerCompleteRoute,
