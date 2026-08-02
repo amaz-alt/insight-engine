@@ -85,9 +85,10 @@ function GroupsPage() {
   });
 
   const patch = useMutation({
-    mutationFn: async ({ id, values }: { id: string; values: Record<string, unknown> }) => {
+    mutationFn: async ({ id, values }: { id: string; values: { enabled?: boolean; can_post?: boolean } }) => {
       const { error } = await supabase.from("groups").update(values).eq("id", id);
       if (error) throw new Error(error.message);
+
     },
     onSuccess: invalidate,
     onError: (error: Error) => toast.error(error.message),
