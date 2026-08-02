@@ -17,6 +17,7 @@ import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as InsightsIndexRouteImport } from './routes/insights.index'
 import { Route as InsightsIdRouteImport } from './routes/insights.$id'
+import { Route as ApiPublicCronAiCycleRouteImport } from './routes/api/public/cron/ai-cycle'
 import { Route as ApiPublicWorkerCompleteRouteImport } from './routes/api/public/worker/complete'
 import { Route as ApiPublicWorkerHeartbeatRouteImport } from './routes/api/public/worker/heartbeat'
 import { Route as ApiPublicWorkerIngestRouteImport } from './routes/api/public/worker/ingest'
@@ -62,6 +63,11 @@ const InsightsIdRoute = InsightsIdRouteImport.update({
   path: '/insights/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronAiCycleRoute = ApiPublicCronAiCycleRouteImport.update({
+  id: '/api/public/cron/ai-cycle',
+  path: '/api/public/cron/ai-cycle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWorkerCompleteRoute = ApiPublicWorkerCompleteRouteImport.update({
   id: '/api/public/worker/complete',
   path: '/api/public/worker/complete',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
+  '/api/public/cron/ai-cycle': typeof ApiPublicCronAiCycleRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
   '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights': typeof InsightsIndexRoute
+  '/api/public/cron/ai-cycle': typeof ApiPublicCronAiCycleRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
   '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
+  '/api/public/cron/ai-cycle': typeof ApiPublicCronAiCycleRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
   '/api/public/worker/heartbeat': typeof ApiPublicWorkerHeartbeatRoute
   '/api/public/worker/ingest': typeof ApiPublicWorkerIngestRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/insights/$id'
     | '/insights/'
+    | '/api/public/cron/ai-cycle'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
     | '/api/public/worker/ingest'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/insights/$id'
     | '/insights'
+    | '/api/public/cron/ai-cycle'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
     | '/api/public/worker/ingest'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/insights/$id'
     | '/insights/'
+    | '/api/public/cron/ai-cycle'
     | '/api/public/worker/complete'
     | '/api/public/worker/heartbeat'
     | '/api/public/worker/ingest'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   InsightsIdRoute: typeof InsightsIdRoute
   InsightsIndexRoute: typeof InsightsIndexRoute
+  ApiPublicCronAiCycleRoute: typeof ApiPublicCronAiCycleRoute
   ApiPublicWorkerCompleteRoute: typeof ApiPublicWorkerCompleteRoute
   ApiPublicWorkerHeartbeatRoute: typeof ApiPublicWorkerHeartbeatRoute
   ApiPublicWorkerIngestRoute: typeof ApiPublicWorkerIngestRoute
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InsightsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/ai-cycle': {
+      id: '/api/public/cron/ai-cycle'
+      path: '/api/public/cron/ai-cycle'
+      fullPath: '/api/public/cron/ai-cycle'
+      preLoaderRoute: typeof ApiPublicCronAiCycleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/worker/complete': {
       id: '/api/public/worker/complete'
       path: '/api/public/worker/complete'
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   InsightsIdRoute: InsightsIdRoute,
   InsightsIndexRoute: InsightsIndexRoute,
+  ApiPublicCronAiCycleRoute: ApiPublicCronAiCycleRoute,
   ApiPublicWorkerCompleteRoute: ApiPublicWorkerCompleteRoute,
   ApiPublicWorkerHeartbeatRoute: ApiPublicWorkerHeartbeatRoute,
   ApiPublicWorkerIngestRoute: ApiPublicWorkerIngestRoute,

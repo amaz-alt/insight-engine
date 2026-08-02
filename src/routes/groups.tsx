@@ -42,7 +42,9 @@ function GroupsPage() {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [folderId, setFolderId] = useState("");
+  const [newFolder, setNewFolder] = useState("");
   const [filter, setFilter] = useState("all");
+
 
   const { data: folders } = useQuery({
     queryKey: ["folders"],
@@ -65,6 +67,35 @@ function GroupsPage() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["groups"] });
 
+  const addFolder = useMutation({
+    mutationFn: async () => {
+      if (!newFolder.trim()) throw new Error("Give the folder a name");
+      const { error } = await supabase.from("folders").insert({ name: newFolder.trim() });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      setNewFolder("");
+      toast.success("Folder created");
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const removeFolder = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("groups").update({ folder_id: null }).eq("folder_id", id);
+      const { error } = await supabase.from("folders").delete().eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Folder deleted — its groups are now unfiled");
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
+      invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+
   const addGroup = useMutation({
     mutationFn: async () => {
       if (!name.trim() || !url.trim()) throw new Error("Name and group URL are both required");
@@ -85,7 +116,14 @@ function GroupsPage() {
   });
 
   const patch = useMutation({
-    mutationFn: async ({ id, values }: { id: string; values: { enabled?: boolean; can_post?: boolean } }) => {
+    mutationFn: async ({
+      id,
+      values,
+    }: {
+      id: string;
+      values: { enabled?: boolean; can_post?: boolean; folder_id?: string | null };
+    }) => {
+
       const { error } = await supabase.from("groups").update(values).eq("id", id);
       if (error) throw new Error(error.message);
 
@@ -146,6 +184,36 @@ function GroupsPage() {
       </Panel>
 
       <Panel>
+        <PanelHeader title="Folders" hint="Group your groups by niche or theme" />
+        <div className="flex flex-wrap items-end gap-3 p-5">
+          <Field label="new folder">
+            <Input
+              value={newFolder}
+              onChange={(e) => setNewFolder(e.target.value)}
+              placeholder="Digital products"
+            />
+          </Field>
+          <Button onClick={() => addFolder.mutate()} disabled={addFolder.isPending}>
+            <Plus /> Create
+          </Button>
+          <div className="flex flex-wrap gap-2">
+            {(folders ?? []).map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                title="Delete folder"
+                onClick={() => removeFolder.mutate(f.id)}
+                className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition hover:border-destructive hover:text-destructive"
+              >
+                {f.name} ×
+              </button>
+            ))}
+          </div>
+        </div>
+      </Panel>
+
+      <Panel>
+
         <PanelHeader
           title="Library"
           hint="Toggle scanning and posting permission per group"
@@ -186,6 +254,22 @@ function GroupsPage() {
                 </div>
 
                 <div className="flex items-center gap-5">
+                  <Select
+                    aria-label="Folder"
+                    className="h-8 w-36 text-xs"
+                    value={g.folder_id ?? ""}
+                    onChange={(e) =>
+                      patch.mutate({ id: g.id, values: { folder_id: e.target.value || null } })
+                    }
+                  >
+                    <option value="">Unfiled</option>
+                    {(folders ?? []).map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.name}
+                      </option>
+                    ))}
+                  </Select>
+
                   <div className="flex items-center gap-2">
                     <span className="label-mono">scan</span>
                     <Toggle
