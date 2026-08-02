@@ -81,3 +81,23 @@ Commands the app can send from Worker Health: `validate_session`, `reconnect`
 See `.env.example`. Credentials are never stored by the worker — only the Chrome
 profile holds the Facebook session, and the shared `WORKER_TOKEN` is redacted
 from every log line.
+
+## Login troubleshooting
+
+`login.sh` verifies everything before opening the browser and tells you exactly
+what is missing:
+
+- **noVNC keeps reconnecting** — the X screen or `x11vnc` was not up yet. `login.sh`
+  now waits for `:99` and port 5900, and a watchdog restarts `x11vnc`/`websockify`
+  if either drops, so the session stays up until you press Ctrl-C.
+- **"Playwright's Chromium is not installed"** — no system Chrome is needed; the worker
+  uses Playwright's bundled Chromium. Install it with
+  `sudo PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright npx playwright install --with-deps chromium`
+  (this is what `install.sh` does). `PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright` is
+  written into `.env` so systemd, PM2 and Docker all resolve the same binary.
+- **Chrome exits immediately as root** — the launch args include `--no-sandbox`,
+  `--disable-setuid-sandbox`, `--disable-dev-shm-usage` and `--disable-gpu`, which is
+  what root-owned Chromium needs. Launch failures are logged as
+  `chrome.launch_failed` with the display and a fix hint.
+- **The login form kept reloading** — fixed: during login the worker navigates once and
+  then only inspects cookies, so typing is never interrupted. You have 45 minutes.

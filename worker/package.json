@@ -7,7 +7,7 @@
   "main": "src/index.mjs",
   "scripts": {
     "start": "node src/index.mjs",
-    "login": "HEADLESS=false LOGIN_ONLY=true node src/index.mjs",
+    "login": "bash login.sh",
     "status": "node -e \"fetch('http://127.0.0.1:'+(process.env.PORT||8787)+'/status',{headers:{'x-worker-token':process.env.WORKER_TOKEN}}).then(r=>r.json()).then(d=>console.log(JSON.stringify(d,null,2)))\""
   },
   "dependencies": {
