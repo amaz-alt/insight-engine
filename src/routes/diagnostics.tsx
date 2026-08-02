@@ -130,7 +130,7 @@ function DiagnosticsPage() {
                   <PanelHeader
                     title={group}
                     hint={`${items.length} check${items.length === 1 ? "" : "s"}`}
-                    actions={<Badge tone={TONE[worst]}>{worst === "pass" ? "healthy" : worst}</Badge>}
+                    action={<Badge tone={TONE[worst]}>{worst === "pass" ? "healthy" : worst}</Badge>}
                   />
                   <ul className="divide-y divide-border">
                     {items.map((check) => (
