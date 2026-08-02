@@ -159,21 +159,42 @@ log.info("worker.start", { version: config.version, app_url: config.appUrl });
 await getPage();
 
 if (config.loginOnly) {
-  // One-time interactive login: hold the browser open until Facebook is signed in.
-  log.info("login.waiting", { hint: "sign into Facebook in the window that opened" });
-  for (let i = 0; i < 120; i += 1) {
-    const { loggedIn } = await checkSession(await getPage());
+  // One-time interactive login. Navigate ONCE, then poll cookies only — a repeated
+  // goto() would wipe whatever the user is typing into the login form.
+  const loginPage = await getPage();
+  try {
+    await loginPage.goto("https://www.facebook.com/login", { waitUntil: "domcontentloaded" });
+  } catch (error) {
+    log.warn("login.navigation_failed", { error: String(error?.message ?? error) });
+  }
+
+  log.info("login.waiting", {
+    hint: "sign into Facebook in the window shown at http://<vps-ip>:6080/vnc.html",
+    timeout_minutes: 45,
+  });
+
+  const deadline = Date.now() + 45 * 60_000;
+  while (Date.now() < deadline) {
+    if (!loginPage || loginPage.isClosed() || state.chromeStatus !== "running") {
+      // The user (or a crash) closed the window — bring it back so the session
+      // stays reachable instead of the process dying.
+      log.warn("login.window_gone", { action: "relaunching" });
+      await restartBrowser("login window closed").catch(() => {});
+    }
+    const { loggedIn } = await probeSession(await getPage());
     if (loggedIn) {
       log.info("login.success", { profile: config.profileDir });
+      await sleep(3000); // let Facebook flush the session cookies to disk
       await closeBrowser();
       process.exit(0);
     }
-    await sleep(10_000);
+    await sleep(5000);
   }
-  log.error("login.timeout", {});
+  log.error("login.timeout", { hint: "re-run login.sh and sign in within 45 minutes" });
   await closeBrowser();
   process.exit(1);
 }
+
 
 await heartbeat();
 loop("heartbeat", heartbeat, config.heartbeatSeconds);
