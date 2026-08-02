@@ -184,6 +184,36 @@ function GroupsPage() {
       </Panel>
 
       <Panel>
+        <PanelHeader title="Folders" hint="Group your groups by niche or theme" />
+        <div className="flex flex-wrap items-end gap-3 p-5">
+          <Field label="new folder">
+            <Input
+              value={newFolder}
+              onChange={(e) => setNewFolder(e.target.value)}
+              placeholder="Digital products"
+            />
+          </Field>
+          <Button onClick={() => addFolder.mutate()} disabled={addFolder.isPending}>
+            <Plus /> Create
+          </Button>
+          <div className="flex flex-wrap gap-2">
+            {(folders ?? []).map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                title="Delete folder"
+                onClick={() => removeFolder.mutate(f.id)}
+                className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition hover:border-destructive hover:text-destructive"
+              >
+                {f.name} ×
+              </button>
+            ))}
+          </div>
+        </div>
+      </Panel>
+
+      <Panel>
+
         <PanelHeader
           title="Library"
           hint="Toggle scanning and posting permission per group"
