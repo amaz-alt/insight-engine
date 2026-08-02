@@ -16,6 +16,7 @@ import {
   Library,
   PenLine,
   Settings2,
+  Stethoscope,
   Users,
 } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
@@ -136,6 +137,7 @@ const NAV = [
   { to: "/schedule", label: "Schedule", icon: CalendarClock },
   { to: "/knowledge", label: "Knowledge", icon: Library },
   { to: "/worker", label: "Worker", icon: HeartPulse },
+  { to: "/diagnostics", label: "Diagnostics", icon: Stethoscope },
   { to: "/settings", label: "Settings", icon: Settings2 },
 ] as const;
 
