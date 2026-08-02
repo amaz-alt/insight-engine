@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ContentRouteImport } from './routes/content'
 import { Route as GroupsRouteImport } from './routes/groups'
+import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as InsightsIndexRouteImport } from './routes/insights.index'
 import { Route as InsightsIdRouteImport } from './routes/insights.$id'
 import { Route as ApiPublicWorkerCompleteRouteImport } from './routes/api/public/worker/complete'
@@ -32,6 +33,11 @@ const ContentRoute = ContentRouteImport.update({
 const GroupsRoute = GroupsRouteImport.update({
   id: '/groups',
   path: '/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsightsIndexRoute = InsightsIndexRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/content': typeof ContentRoute
   '/groups': typeof GroupsRoute
+  '/schedule': typeof ScheduleRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/content': typeof ContentRoute
   '/groups': typeof GroupsRoute
+  '/schedule': typeof ScheduleRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/content': typeof ContentRoute
   '/groups': typeof GroupsRoute
+  '/schedule': typeof ScheduleRoute
   '/insights/$id': typeof InsightsIdRoute
   '/insights/': typeof InsightsIndexRoute
   '/api/public/worker/complete': typeof ApiPublicWorkerCompleteRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/'
     | '/content'
     | '/groups'
+    | '/schedule'
     | '/insights/$id'
     | '/insights/'
     | '/api/public/worker/complete'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/content'
     | '/groups'
+    | '/schedule'
     | '/insights/$id'
     | '/insights'
     | '/api/public/worker/complete'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/'
     | '/content'
     | '/groups'
+    | '/schedule'
     | '/insights/$id'
     | '/insights/'
     | '/api/public/worker/complete'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContentRoute: typeof ContentRoute
   GroupsRoute: typeof GroupsRoute
+  ScheduleRoute: typeof ScheduleRoute
   InsightsIdRoute: typeof InsightsIdRoute
   InsightsIndexRoute: typeof InsightsIndexRoute
   ApiPublicWorkerCompleteRoute: typeof ApiPublicWorkerCompleteRoute
@@ -169,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/groups'
       fullPath: '/groups'
       preLoaderRoute: typeof GroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insights/': {
@@ -220,6 +240,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContentRoute: ContentRoute,
   GroupsRoute: GroupsRoute,
+  ScheduleRoute: ScheduleRoute,
   InsightsIdRoute: InsightsIdRoute,
   InsightsIndexRoute: InsightsIndexRoute,
   ApiPublicWorkerCompleteRoute: ApiPublicWorkerCompleteRoute,
