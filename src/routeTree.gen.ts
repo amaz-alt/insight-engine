@@ -15,6 +15,7 @@ import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as GroupsRouteImport } from './routes/groups'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as SettingsRouteRouteImport } from './routes/settings.route'
 import { Route as WorkerRouteImport } from './routes/worker'
 import { Route as InsightsIndexRouteImport } from './routes/insights.index'
 import { Route as InsightsIdRouteImport } from './routes/insights.$id'
@@ -55,6 +56,11 @@ const ScheduleRoute = ScheduleRouteImport.update({
   path: '/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRouteRoute = SettingsRouteRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkerRoute = WorkerRouteImport.update({
   id: '/worker',
   path: '/worker',
@@ -71,9 +77,9 @@ const InsightsIdRoute = InsightsIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
-  id: '/settings/',
-  path: '/settings/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRouteRoute,
 } as any)
 const ApiPublicCronAiCycleRoute = ApiPublicCronAiCycleRouteImport.update({
   id: '/api/public/cron/ai-cycle',
@@ -104,6 +110,7 @@ const ApiPublicWorkerJobsRoute = ApiPublicWorkerJobsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRouteRouteWithChildren
   '/content': typeof ContentRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/groups': typeof GroupsRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRouteRouteWithChildren
   '/content': typeof ContentRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/groups': typeof GroupsRoute
@@ -158,6 +166,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/settings'
     | '/content'
     | '/diagnostics'
     | '/groups'
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/settings'
     | '/content'
     | '/diagnostics'
     | '/groups'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
   ContentRoute: typeof ContentRoute
   DiagnosticsRoute: typeof DiagnosticsRoute
   GroupsRoute: typeof GroupsRoute
@@ -218,7 +229,6 @@ export interface RootRouteChildren {
   WorkerRoute: typeof WorkerRoute
   InsightsIdRoute: typeof InsightsIdRoute
   InsightsIndexRoute: typeof InsightsIndexRoute
-  SettingsIndexRoute: typeof SettingsIndexRoute
   ApiPublicCronAiCycleRoute: typeof ApiPublicCronAiCycleRoute
   ApiPublicWorkerCompleteRoute: typeof ApiPublicWorkerCompleteRoute
   ApiPublicWorkerHeartbeatRoute: typeof ApiPublicWorkerHeartbeatRoute
@@ -270,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScheduleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/worker': {
       id: '/worker'
       path: '/worker'
@@ -293,10 +310,10 @@ declare module '@tanstack/react-router' {
     }
     '/settings/': {
       id: '/settings/'
-      path: '/settings'
+      path: '/'
       fullPath: '/settings/'
       preLoaderRoute: typeof SettingsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SettingsRouteRoute
     }
     '/api/public/cron/ai-cycle': {
       id: '/api/public/cron/ai-cycle'
@@ -336,8 +353,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface SettingsRouteRouteChildren {
+  SettingsIndexRoute: typeof SettingsIndexRoute
+}
+
+const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
+  SettingsIndexRoute: SettingsIndexRoute,
+}
+
+const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
+  SettingsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SettingsRouteRoute: SettingsRouteRouteWithChildren,
   ContentRoute: ContentRoute,
   DiagnosticsRoute: DiagnosticsRoute,
   GroupsRoute: GroupsRoute,
@@ -346,7 +376,6 @@ const rootRouteChildren: RootRouteChildren = {
   WorkerRoute: WorkerRoute,
   InsightsIdRoute: InsightsIdRoute,
   InsightsIndexRoute: InsightsIndexRoute,
-  SettingsIndexRoute: SettingsIndexRoute,
   ApiPublicCronAiCycleRoute: ApiPublicCronAiCycleRoute,
   ApiPublicWorkerCompleteRoute: ApiPublicWorkerCompleteRoute,
   ApiPublicWorkerHeartbeatRoute: ApiPublicWorkerHeartbeatRoute,
