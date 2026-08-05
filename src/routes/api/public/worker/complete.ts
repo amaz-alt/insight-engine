@@ -101,7 +101,8 @@ export const Route = createFileRoute("/api/public/worker/complete")({
         }
 
         return json({ ok: true });
-      },
+      }),
+
     },
   },
 });
