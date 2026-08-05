@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/public/worker/heartbeat")({
             session_status: status,
             last_heartbeat_at: now,
             last_sync_at: now,
-            session_validated_at: status === "connected" ? now : auth.settings.session_validated_at,
+            session_validated_at: status === "connected" ? now : settings.session_validated_at,
             chrome_status: body.chrome_status ?? "running",
             ...(body.worker_version ? { worker_version: body.worker_version } : {}),
             ...(body.session_expires_at ? { session_expires_at: body.session_expires_at } : {}),
@@ -56,10 +56,11 @@ export const Route = createFileRoute("/api/public/worker/heartbeat")({
         return json({
           ok: true,
           command: command ?? null,
-          paused: auth.settings.worker_paused,
-          settings: auth.settings,
+          paused: settings.worker_paused,
+          settings,
         });
-      },
+      }),
+
     },
   },
 });
