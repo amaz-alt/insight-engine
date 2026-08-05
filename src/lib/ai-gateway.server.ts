@@ -22,5 +22,6 @@ export function requireGatewayKey() {
   return key;
 }
 
-/** Cheapest capable Gemini model; swap to gemini-2.5-flash for higher quality. */
-export const AI_MODEL = "gemini-2.5-flash-lite";
+/** Cheapest capable Gemini model; swap to gemini-3.5-flash for higher quality. */
+export const AI_MODEL = "gemini-3.1-flash-lite";
+
