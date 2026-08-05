@@ -53,12 +53,16 @@ export const Route = createFileRoute("/api/public/worker/heartbeat")({
           await log("worker", "info", `Worker picked up command: ${command}`);
         }
 
+        // Never echo the shared token back over the wire.
+        const { worker_token: _token, ...safeSettings } = settings;
+
         return json({
           ok: true,
           command: command ?? null,
           paused: settings.worker_paused,
-          settings,
+          settings: safeSettings,
         });
+
       }),
 
     },
