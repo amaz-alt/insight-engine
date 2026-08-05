@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { authorizeWorker, inQuietHours, json, log } from "@/lib/worker.server";
+import { inQuietHours, json, log, workerEndpoint } from "@/lib/worker.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const randomBetween = (min: number, max: number) =>
@@ -14,11 +14,9 @@ const randomBetween = (min: number, max: number) =>
 export const Route = createFileRoute("/api/public/worker/jobs")({
   server: {
     handlers: {
-      POST: async ({ request }) => {
-        const auth = await authorizeWorker(request);
-        if (!auth.ok) return auth.response;
-        const s = auth.settings;
+      POST: workerEndpoint("jobs", async ({ settings: s }) => {
         const now = new Date();
+
 
         if (s.worker_paused) {
           return json({ jobs: [], paused: true, reason: "worker paused from the app" });
@@ -173,7 +171,8 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             auto_publish: s.auto_publish,
           },
         });
-      },
+      }),
+
     },
   },
 });
