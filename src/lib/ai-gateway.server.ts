@@ -9,8 +9,11 @@ export function createLovableAiGatewayProvider(apiKey: string) {
     name: "gemini",
     baseURL: "https://generativelanguage.googleapis.com/v1beta/openai",
     apiKey,
+    // Enforce structured output server-side via strict json_schema.
+    supportsStructuredOutputs: true,
   });
 }
+
 
 export function requireGatewayKey() {
   const key = process.env["GEMINI_API_KEY"];
