@@ -171,7 +171,8 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             auto_publish: s.auto_publish,
           },
         });
-      },
+      }),
+
     },
   },
 });
