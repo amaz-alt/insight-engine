@@ -100,7 +100,8 @@ export const Route = createFileRoute("/api/public/worker/ingest")({
         );
 
         return json({ ok: true, stored, seen: rows.length });
-      },
+      }),
+
     },
   },
 });
