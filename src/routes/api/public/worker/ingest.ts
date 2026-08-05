@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { authorizeWorker, fingerprint, json, log } from "@/lib/worker.server";
+import { fingerprint, json, log, workerEndpoint } from "@/lib/worker.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -20,9 +20,8 @@ type IncomingPost = {
 export const Route = createFileRoute("/api/public/worker/ingest")({
   server: {
     handlers: {
-      POST: async ({ request }) => {
-        const auth = await authorizeWorker(request);
-        if (!auth.ok) return auth.response;
+      POST: workerEndpoint("ingest", async ({ request }) => {
+
 
         const body = (await request.json().catch(() => null)) as {
           group_id?: string;
