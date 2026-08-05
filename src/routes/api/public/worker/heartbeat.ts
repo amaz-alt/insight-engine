@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { authorizeWorker, json, log } from "@/lib/worker.server";
+import { json, log, workerEndpoint } from "@/lib/worker.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 /**
@@ -10,10 +10,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 export const Route = createFileRoute("/api/public/worker/heartbeat")({
   server: {
     handlers: {
-      POST: async ({ request }) => {
-        const auth = await authorizeWorker(request);
-        if (!auth.ok) return auth.response;
-
+      POST: workerEndpoint("heartbeat", async ({ request, settings }) => {
         const body = (await request.json().catch(() => ({}))) as {
           session_status?: string;
           account_name?: string;
@@ -30,7 +27,8 @@ export const Route = createFileRoute("/api/public/worker/heartbeat")({
           : "connected";
 
         const now = new Date().toISOString();
-        const command = auth.settings.pending_command;
+        const command = settings.pending_command;
+
 
         await supabaseAdmin
           .from("settings")
