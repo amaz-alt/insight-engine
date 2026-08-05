@@ -1,23 +1,26 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
-const LOVABLE_AIG_RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
-
-export function createLovableAiGatewayProvider(lovableApiKey: string) {
+/**
+ * AI provider: Google AI Studio (Gemini) via its OpenAI-compatible endpoint,
+ * using the project's own GEMINI_API_KEY. No Lovable credits are consumed.
+ */
+export function createLovableAiGatewayProvider(apiKey: string) {
   return createOpenAICompatible({
-    name: "lovable",
-    baseURL: "https://ai.gateway.lovable.dev/v1",
-    headers: {
-      "Lovable-API-Key": lovableApiKey,
-      "X-Lovable-AIG-SDK": "vercel-ai-sdk",
-    },
+    name: "gemini",
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai",
+    apiKey,
   });
 }
 
 export function requireGatewayKey() {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("AI is not configured yet (missing gateway key).");
+  const key = process.env["GEMINI_API_KEY"];
+  if (!key) {
+    throw new Error(
+      "AI is not configured yet — add a GEMINI_API_KEY (Google AI Studio) in project settings.",
+    );
+  }
   return key;
 }
 
-export const AI_MODEL = "google/gemini-3.6-flash";
-export { LOVABLE_AIG_RUN_ID_HEADER };
+/** Cheapest capable Gemini model; swap to gemini-2.5-flash for higher quality. */
+export const AI_MODEL = "gemini-2.5-flash-lite";
