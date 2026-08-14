@@ -54,6 +54,8 @@ type Form = {
   max_job_attempts: number;
   allow_repost_same_content: boolean;
   timezone: string;
+  session_status: string;
+
 
 };
 
