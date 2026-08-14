@@ -87,6 +87,10 @@ function SettingsPage() {
         quiet_hours_start: data.quiet_hours_start,
         quiet_hours_end: data.quiet_hours_end,
         scan_interval_hours: data.scan_interval_hours,
+        job_lease_minutes: data.job_lease_minutes,
+        max_job_attempts: data.max_job_attempts,
+        allow_repost_same_content: data.allow_repost_same_content,
+
         timezone: data.timezone,
         session_status: data.session_status,
       });
