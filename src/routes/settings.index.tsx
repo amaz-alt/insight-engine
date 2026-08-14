@@ -50,8 +50,11 @@ type Form = {
   quiet_hours_start: number;
   quiet_hours_end: number;
   scan_interval_hours: number;
+  job_lease_minutes: number;
+  max_job_attempts: number;
+  allow_repost_same_content: boolean;
   timezone: string;
-  session_status: string;
+
 };
 
 function SettingsPage() {
