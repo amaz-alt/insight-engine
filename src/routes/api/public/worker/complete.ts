@@ -3,14 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { json, log, workerEndpoint } from "@/lib/worker.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const MAX_ATTEMPTS = 3;
-
 /** The worker reports the outcome of a claimed job. */
 export const Route = createFileRoute("/api/public/worker/complete")({
   server: {
     handlers: {
-      POST: workerEndpoint("complete", async ({ request }) => {
-
+      POST: workerEndpoint("complete", async ({ request, settings }) => {
+        const MAX_ATTEMPTS = Math.max(1, settings.max_job_attempts);
 
         const body = (await request.json().catch(() => null)) as {
           job_id?: string;
@@ -25,20 +23,29 @@ export const Route = createFileRoute("/api/public/worker/complete")({
 
         const { data: job } = await supabaseAdmin
           .from("worker_jobs")
-          .select("id, type, payload")
+          .select("id, type, payload, attempts")
           .eq("id", body.job_id)
           .maybeSingle();
         if (!job) return json({ error: "unknown job" }, 404);
 
         const now = new Date().toISOString();
 
+        // Attempts live on the job row, so a worker restart can never reset the
+        // retry counter and loop the same failing action forever.
+        const jobAttempts = (job.attempts ?? 0) + (failed || requeued ? 1 : 0);
+        const jobExhausted = (failed || requeued) && jobAttempts >= MAX_ATTEMPTS;
+
         await supabaseAdmin
           .from("worker_jobs")
           .update({
-            status: requeued ? "queued" : failed ? "failed" : "done",
-            ...(requeued ? { claimed_at: null } : {}),
-            completed_at: requeued ? null : now,
-            error: body.error ?? null,
+            status: jobExhausted ? "failed" : requeued ? "queued" : failed ? "failed" : "done",
+            attempts: jobAttempts,
+            claimed_at: requeued && !jobExhausted ? null : job.attempts === null ? null : undefined,
+            lease_expires_at: null,
+            completed_at: requeued && !jobExhausted ? null : now,
+            error: jobExhausted
+              ? `Gave up after ${jobAttempts} attempts: ${body.error ?? "unknown error"}`
+              : (body.error ?? null),
             result: body.result_url ? { url: body.result_url } : null,
           })
           .eq("id", job.id);
@@ -52,7 +59,8 @@ export const Route = createFileRoute("/api/public/worker/complete")({
             .eq("id", payload.scheduled_post_id)
             .maybeSingle();
           const attempts = (sp?.attempts ?? 0) + 1;
-          const exhausted = attempts >= MAX_ATTEMPTS;
+          const exhausted = attempts >= MAX_ATTEMPTS || jobExhausted;
+
 
           await supabaseAdmin
             .from("scheduled_posts")
