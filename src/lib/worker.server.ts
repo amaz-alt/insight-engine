@@ -103,3 +103,85 @@ export async function log(
     meta,
   });
 }
+
+/** True when the current hour is inside the allowed posting window. */
+export function inPostingWindow(settings: Settings, now = new Date()) {
+  const hour = now.getUTCHours();
+  const { window_start_hour: start, window_end_hour: end } = settings;
+  if (start === end) return true;
+  return start < end ? hour >= start && hour < end : hour >= start || hour < end;
+}
+
+/**
+ * Recovers work abandoned by a crashed / rebooted worker.
+ *
+ * A claimed job whose lease has run out is either handed back to the queue or —
+ * once it has burned through `max_job_attempts` — parked as failed so it shows
+ * up on the Worker Health screen instead of silently blocking the pipeline.
+ * `scheduled_posts` stuck in `publishing` are released the same way, which is
+ * what previously made a single crash freeze a post forever.
+ */
+export async function reclaimStaleWork(settings: Settings, now = new Date()) {
+  const cutoff = new Date(
+    now.getTime() - Math.max(2, settings.job_lease_minutes) * 60_000,
+  ).toISOString();
+
+  const { data: stale } = await supabaseAdmin
+    .from("worker_jobs")
+    .select("id, type, attempts, payload")
+    .eq("status", "claimed")
+    .lt("claimed_at", cutoff);
+
+  if (!stale?.length) return { reclaimed: 0, abandoned: 0 };
+
+  let reclaimed = 0;
+  let abandoned = 0;
+
+  for (const job of stale) {
+    const attempts = (job.attempts ?? 0) + 1;
+    const exhausted = attempts >= settings.max_job_attempts;
+
+    await supabaseAdmin
+      .from("worker_jobs")
+      .update({
+        status: exhausted ? "failed" : "queued",
+        attempts,
+        claimed_at: null,
+        lease_expires_at: null,
+        completed_at: exhausted ? now.toISOString() : null,
+        error: exhausted
+          ? `Abandoned after ${attempts} attempts — the worker never reported back`
+          : `Attempt ${attempts} timed out after ${settings.job_lease_minutes} min; requeued`,
+      })
+      .eq("id", job.id);
+
+    const payload = (job.payload ?? {}) as { scheduled_post_id?: string; group_id?: string };
+    if (payload.scheduled_post_id) {
+      await supabaseAdmin
+        .from("scheduled_posts")
+        .update({
+          status: exhausted ? "failed" : "scheduled",
+          claimed_at: null,
+          error: exhausted
+            ? "The worker stopped responding before this post was confirmed"
+            : "Worker timed out — will be tried again",
+        })
+        .eq("id", payload.scheduled_post_id)
+        .eq("status", "publishing");
+    }
+
+    if (exhausted) abandoned += 1;
+    else reclaimed += 1;
+  }
+
+  await log(
+    "worker",
+    abandoned ? "error" : "warning",
+    `Recovered stalled work: ${reclaimed} job${reclaimed === 1 ? "" : "s"} requeued, ${abandoned} parked as failed`,
+    null,
+    { reclaimed, abandoned, lease_minutes: settings.job_lease_minutes },
+  );
+
+  return { reclaimed, abandoned };
+}
+

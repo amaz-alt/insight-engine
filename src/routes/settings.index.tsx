@@ -50,8 +50,13 @@ type Form = {
   quiet_hours_start: number;
   quiet_hours_end: number;
   scan_interval_hours: number;
+  job_lease_minutes: number;
+  max_job_attempts: number;
+  allow_repost_same_content: boolean;
   timezone: string;
   session_status: string;
+
+
 };
 
 function SettingsPage() {
@@ -82,6 +87,10 @@ function SettingsPage() {
         quiet_hours_start: data.quiet_hours_start,
         quiet_hours_end: data.quiet_hours_end,
         scan_interval_hours: data.scan_interval_hours,
+        job_lease_minutes: data.job_lease_minutes,
+        max_job_attempts: data.max_job_attempts,
+        allow_repost_same_content: data.allow_repost_same_content,
+
         timezone: data.timezone,
         session_status: data.session_status,
       });
@@ -262,10 +271,38 @@ function SettingsPage() {
           {num("window_end_hour", "posting window end (hour)", 1, 23)}
           {num("quiet_hours_start", "quiet hours start (hour)", 0, 23, "No publishing at all during quiet hours")}
           {num("quiet_hours_end", "quiet hours end (hour)", 0, 23)}
+          {num(
+            "job_lease_minutes",
+            "job timeout before recovery (min)",
+            2,
+            120,
+            "If the worker goes silent mid-job, the job is handed back after this long",
+          )}
+          {num(
+            "max_job_attempts",
+            "attempts before a job is parked",
+            1,
+            10,
+            "After this many failures the job stops retrying and shows up as failed",
+          )}
           <Field label="timezone">
             <Input value={form.timezone} onChange={(e) => set("timezone", e.target.value)} />
           </Field>
+          <div className="sm:col-span-2 flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3">
+            <div>
+              <p className="text-sm font-medium">Allow reposting identical content</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Off by default: the same content piece is never published to the same group twice.
+              </p>
+            </div>
+            <Toggle
+              checked={form.allow_repost_same_content}
+              label="Allow reposting identical content"
+              onChange={(next) => set("allow_repost_same_content", next)}
+            />
+          </div>
         </div>
+
         <div className="flex justify-end border-t border-border px-5 py-3">
           <Button variant="primary" onClick={() => save.mutate()} disabled={save.isPending}>
             <Save /> {save.isPending ? "Saving…" : "Save settings"}

@@ -482,18 +482,21 @@ export type Database = {
       }
       settings: {
         Row: {
+          allow_repost_same_content: boolean
           auto_publish: boolean
           chrome_status: string
           created_at: string
           daily_post_limit: number
           fb_account_name: string | null
           id: boolean
+          job_lease_minutes: number
           last_heartbeat_at: string | null
           last_publish_at: string | null
           last_scan_at: string | null
           last_sync_at: string | null
           max_delay_seconds: number
           max_groups_per_cycle: number
+          max_job_attempts: number
           min_delay_seconds: number
           pending_command: string | null
           pending_command_at: string | null
@@ -514,18 +517,21 @@ export type Database = {
           worker_version: string | null
         }
         Insert: {
+          allow_repost_same_content?: boolean
           auto_publish?: boolean
           chrome_status?: string
           created_at?: string
           daily_post_limit?: number
           fb_account_name?: string | null
           id?: boolean
+          job_lease_minutes?: number
           last_heartbeat_at?: string | null
           last_publish_at?: string | null
           last_scan_at?: string | null
           last_sync_at?: string | null
           max_delay_seconds?: number
           max_groups_per_cycle?: number
+          max_job_attempts?: number
           min_delay_seconds?: number
           pending_command?: string | null
           pending_command_at?: string | null
@@ -546,18 +552,21 @@ export type Database = {
           worker_version?: string | null
         }
         Update: {
+          allow_repost_same_content?: boolean
           auto_publish?: boolean
           chrome_status?: string
           created_at?: string
           daily_post_limit?: number
           fb_account_name?: string | null
           id?: boolean
+          job_lease_minutes?: number
           last_heartbeat_at?: string | null
           last_publish_at?: string | null
           last_scan_at?: string | null
           last_sync_at?: string | null
           max_delay_seconds?: number
           max_groups_per_cycle?: number
+          max_job_attempts?: number
           min_delay_seconds?: number
           pending_command?: string | null
           pending_command_at?: string | null
@@ -581,11 +590,14 @@ export type Database = {
       }
       worker_jobs: {
         Row: {
+          attempts: number
           claimed_at: string | null
           completed_at: string | null
           created_at: string
           error: string | null
+          group_id: string | null
           id: string
+          lease_expires_at: string | null
           payload: Json
           priority: number
           result: Json | null
@@ -594,11 +606,14 @@ export type Database = {
           type: string
         }
         Insert: {
+          attempts?: number
           claimed_at?: string | null
           completed_at?: string | null
           created_at?: string
           error?: string | null
+          group_id?: string | null
           id?: string
+          lease_expires_at?: string | null
           payload?: Json
           priority?: number
           result?: Json | null
@@ -607,11 +622,14 @@ export type Database = {
           type: string
         }
         Update: {
+          attempts?: number
           claimed_at?: string | null
           completed_at?: string | null
           created_at?: string
           error?: string | null
+          group_id?: string | null
           id?: string
+          lease_expires_at?: string | null
           payload?: Json
           priority?: number
           result?: Json | null
@@ -619,7 +637,15 @@ export type Database = {
           status?: string
           type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "worker_jobs_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
