@@ -40,7 +40,7 @@ export const Route = createFileRoute("/api/public/worker/complete")({
           .update({
             status: jobExhausted ? "failed" : requeued ? "queued" : failed ? "failed" : "done",
             attempts: jobAttempts,
-            claimed_at: requeued && !jobExhausted ? null : job.attempts === null ? null : undefined,
+            claimed_at: null,
             lease_expires_at: null,
             completed_at: requeued && !jobExhausted ? null : now,
             error: jobExhausted
