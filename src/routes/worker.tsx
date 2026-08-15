@@ -359,6 +359,52 @@ function WorkerPage() {
       </div>
 
       <Panel>
+        <PanelHeader
+          title="Needs your attention"
+          hint="Posts that failed, were skipped, or are still in flight"
+        />
+        {(attention?.length ?? 0) === 0 ? (
+          <EmptyState
+            title="Nothing stuck"
+            body="Failed, skipped and in-flight posts show up here with the exact reason."
+          />
+        ) : (
+          <ul className="divide-y divide-border">
+            {(attention ?? []).map((item) => (
+              <li key={item.id} className="flex items-start gap-3 px-5 py-3">
+                <Badge
+                  tone={
+                    item.status === "failed"
+                      ? "danger"
+                      : item.status === "publishing"
+                        ? "primary"
+                        : "warning"
+                  }
+                >
+                  {item.status}
+                </Badge>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm">
+                    {(item.groups as { name: string } | null)?.name ?? "unknown group"}
+                    <span className="text-muted-foreground"> · attempt {item.attempts}</span>
+                  </p>
+                  <p className="label-mono mt-0.5 truncate">
+                    {item.error ?? "no error reported"} · {relativeTime(item.scheduled_for)}
+                  </p>
+                </div>
+                {item.status !== "publishing" ? (
+                  <Button size="sm" variant="ghost" onClick={() => retryPost.mutate(item.id)}>
+                    Retry now
+                  </Button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
+
+      <Panel>
+
         <PanelHeader title="Recent worker logs" hint="Scans, publishes, session events and faults" />
         {(logs?.length ?? 0) === 0 ? (
           <EmptyState title="No worker logs yet" body="They appear once the VPS starts checking in." />
