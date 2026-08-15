@@ -75,6 +75,41 @@ function WorkerPage() {
     },
   });
 
+  const { data: attention } = useQuery({
+    queryKey: ["worker-attention"],
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("scheduled_posts")
+        .select("id, status, error, attempts, scheduled_for, groups(name)")
+        .in("status", ["failed", "skipped", "publishing"])
+        .order("scheduled_for", { ascending: false })
+        .limit(20);
+      return data ?? [];
+    },
+  });
+
+  const retryPost = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("scheduled_posts")
+        .update({
+          status: "scheduled",
+          error: null,
+          attempts: 0,
+          claimed_at: null,
+          scheduled_for: new Date().toISOString(),
+        })
+        .eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Rescheduled — the worker picks it up on its next poll");
+      queryClient.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const { data: logs } = useQuery({
     queryKey: ["worker-logs"],
     refetchInterval: 30_000,
@@ -88,6 +123,7 @@ function WorkerPage() {
       return data ?? [];
     },
   });
+
 
   const command = useMutation({
     mutationFn: async (cmd: "validate_session" | "restart_worker" | "reconnect") => {
