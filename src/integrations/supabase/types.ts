@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          chrome_status: string
+          client_label: string | null
+          created_at: string
+          daily_post_limit: number | null
+          enabled: boolean
+          id: string
+          last_heartbeat_at: string | null
+          last_publish_at: string | null
+          last_scan_at: string | null
+          name: string
+          needs_login: boolean
+          notes: string | null
+          pending_command: string | null
+          pending_command_at: string | null
+          profile_dir: string
+          session_expires_at: string | null
+          session_status: string
+          session_validated_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          chrome_status?: string
+          client_label?: string | null
+          created_at?: string
+          daily_post_limit?: number | null
+          enabled?: boolean
+          id?: string
+          last_heartbeat_at?: string | null
+          last_publish_at?: string | null
+          last_scan_at?: string | null
+          name: string
+          needs_login?: boolean
+          notes?: string | null
+          pending_command?: string | null
+          pending_command_at?: string | null
+          profile_dir: string
+          session_expires_at?: string | null
+          session_status?: string
+          session_validated_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          chrome_status?: string
+          client_label?: string | null
+          created_at?: string
+          daily_post_limit?: number | null
+          enabled?: boolean
+          id?: string
+          last_heartbeat_at?: string | null
+          last_publish_at?: string | null
+          last_scan_at?: string | null
+          name?: string
+          needs_login?: boolean
+          notes?: string | null
+          pending_command?: string | null
+          pending_command_at?: string | null
+          profile_dir?: string
+          session_expires_at?: string | null
+          session_status?: string
+          session_validated_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activity_log: {
         Row: {
           created_at: string
@@ -149,6 +215,7 @@ export type Database = {
       }
       groups: {
         Row: {
+          account_id: string | null
           activity_level: string
           can_post: boolean
           created_at: string
@@ -166,6 +233,7 @@ export type Database = {
           url: string
         }
         Insert: {
+          account_id?: string | null
           activity_level?: string
           can_post?: boolean
           created_at?: string
@@ -183,6 +251,7 @@ export type Database = {
           url: string
         }
         Update: {
+          account_id?: string | null
           activity_level?: string
           can_post?: boolean
           created_at?: string
@@ -200,6 +269,13 @@ export type Database = {
           url?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "groups_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "groups_folder_id_fkey"
             columns: ["folder_id"]
@@ -590,6 +666,7 @@ export type Database = {
       }
       worker_jobs: {
         Row: {
+          account_id: string | null
           attempts: number
           claimed_at: string | null
           completed_at: string | null
@@ -606,6 +683,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          account_id?: string | null
           attempts?: number
           claimed_at?: string | null
           completed_at?: string | null
@@ -622,6 +700,7 @@ export type Database = {
           type: string
         }
         Update: {
+          account_id?: string | null
           attempts?: number
           claimed_at?: string | null
           completed_at?: string | null
@@ -638,6 +717,13 @@ export type Database = {
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "worker_jobs_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "worker_jobs_group_id_fkey"
             columns: ["group_id"]
