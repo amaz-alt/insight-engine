@@ -222,6 +222,24 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             }
           }
 
+          const account = usable(group.account_id);
+          if (!account) {
+            await supabaseAdmin
+              .from("scheduled_posts")
+              .update({
+                status: "skipped",
+                error: "The Facebook account for this group is disabled or signed out",
+              })
+              .eq("id", item.id);
+            await log(
+              "publish",
+              "warning",
+              "Held a post back — that group's Facebook account is signed out",
+              item.group_id,
+            );
+            continue;
+          }
+
           if (budget <= 0) break;
           budget -= 1;
 
@@ -229,14 +247,18 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             type: "publish_post",
             priority: 3,
             group_id: item.group_id,
+            account_id: account.id,
             payload: {
               scheduled_post_id: item.id,
               group_id: item.group_id,
               group_name: group.name,
               url: group.url,
               body: piece.body,
+              profile_dir: account.profile_dir,
+              account_name: account.name,
             },
           });
+
           await supabaseAdmin
             .from("scheduled_posts")
             .update({ status: "publishing", claimed_at: now.toISOString() })
