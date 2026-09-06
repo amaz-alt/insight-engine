@@ -112,7 +112,6 @@ function AccountsPage() {
       const { error } = await supabase.from("accounts").update(values).eq("id", id);
       if (error) throw new Error(error.message);
 
-      if (error) throw new Error(error.message);
     },
     onSuccess: invalidate,
     onError: (error: Error) => toast.error(error.message),
