@@ -139,7 +139,7 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
           ? await supabaseAdmin
               .from("scheduled_posts")
               .select(
-                "id, group_id, content_piece_id, groups(name, url, can_post, enabled), content_pieces(body, status)",
+                "id, group_id, content_piece_id, groups(name, url, can_post, enabled, account_id), content_pieces(body, status)",
               )
               .eq("status", "scheduled")
               .lte("scheduled_for", now.toISOString())
@@ -153,8 +153,10 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             url: string;
             can_post: boolean;
             enabled: boolean;
+            account_id: string | null;
           } | null;
           const piece = item.content_pieces as { body: string; status: string } | null;
+
 
           if (!group?.can_post || !group.enabled) {
             await supabaseAdmin
