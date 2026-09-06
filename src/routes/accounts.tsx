@@ -108,8 +108,10 @@ function AccountsPage() {
   });
 
   const patch = useMutation({
-    mutationFn: async ({ id, values }: { id: string; values: Record<string, unknown> }) => {
+    mutationFn: async ({ id, values }: { id: string; values: { enabled?: boolean } }) => {
       const { error } = await supabase.from("accounts").update(values).eq("id", id);
+      if (error) throw new Error(error.message);
+
       if (error) throw new Error(error.message);
     },
     onSuccess: invalidate,
