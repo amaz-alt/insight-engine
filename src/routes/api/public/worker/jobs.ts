@@ -35,6 +35,23 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
         // ── 0. Recover anything a crashed worker left claimed ───────────
         const recovery = await reclaimStaleWork(s, now);
 
+        // Accounts drive everything: work is only ever handed out for an
+        // account that is enabled and signed into Facebook.
+        const { data: accountRows } = await supabaseAdmin
+          .from("accounts")
+          .select("id, name, profile_dir, enabled, session_status, needs_login, pending_command")
+          .order("created_at");
+        const accounts = accountRows ?? [];
+        const byId = new Map(accounts.map((a) => [a.id, a]));
+        const usable = (accountId: string | null) => {
+          const account = accountId ? byId.get(accountId) : undefined;
+          // Groups with no account fall back to the first usable one.
+          const chosen =
+            account ?? accounts.find((a) => a.enabled && a.session_status === "connected");
+          if (!chosen?.enabled || chosen.session_status !== "connected") return null;
+          return chosen;
+        };
+
         // ── 1. Safety limit: scans per hour ─────────────────────────────
         const hourAgo = new Date(now.getTime() - 3600_000).toISOString();
         const scansThisHour = await supabaseAdmin
@@ -53,13 +70,16 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
         ).toISOString();
         const { data: staleGroups } = await supabaseAdmin
           .from("groups")
-          .select("id, name, url, last_scanned_at")
+          .select("id, name, url, last_scanned_at, account_id")
           .eq("enabled", true)
           .or(`last_scanned_at.is.null,last_scanned_at.lt.${staleBefore}`)
           .order("last_scanned_at", { ascending: true, nullsFirst: true })
           .limit(Math.max(0, scanBudget));
 
         for (const g of staleGroups ?? []) {
+          const account = usable(g.account_id);
+          if (!account) continue;
+
           const { data: existing } = await supabaseAdmin
             .from("worker_jobs")
             .select("id")
@@ -73,9 +93,17 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             type: "scan_group",
             priority: 6,
             group_id: g.id,
-            payload: { group_id: g.id, group_name: g.name, url: g.url },
+            account_id: account.id,
+            payload: {
+              group_id: g.id,
+              group_name: g.name,
+              url: g.url,
+              profile_dir: account.profile_dir,
+              account_name: account.name,
+            },
           });
         }
+
 
         // ── 2. Publish gating ───────────────────────────────────────────
         const quiet = inQuietHours(s, now);
