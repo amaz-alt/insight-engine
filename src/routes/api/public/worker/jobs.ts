@@ -307,7 +307,16 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             max_attempts: s.max_job_attempts,
             delay_before_seconds: randomBetween(s.min_delay_seconds, s.max_delay_seconds),
           })),
+          accounts: accounts.map((a) => ({
+            id: a.id,
+            name: a.name,
+            profile_dir: a.profile_dir,
+            enabled: a.enabled,
+            pending_command: a.pending_command,
+            needs_login: a.needs_login,
+          })),
           recovery,
+
           behaviour: {
             window_start_hour: s.window_start_hour,
             window_end_hour: s.window_end_hour,
