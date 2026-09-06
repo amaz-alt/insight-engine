@@ -35,6 +35,23 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
         // ── 0. Recover anything a crashed worker left claimed ───────────
         const recovery = await reclaimStaleWork(s, now);
 
+        // Accounts drive everything: work is only ever handed out for an
+        // account that is enabled and signed into Facebook.
+        const { data: accountRows } = await supabaseAdmin
+          .from("accounts")
+          .select("id, name, profile_dir, enabled, session_status, needs_login, pending_command")
+          .order("created_at");
+        const accounts = accountRows ?? [];
+        const byId = new Map(accounts.map((a) => [a.id, a]));
+        const usable = (accountId: string | null) => {
+          const account = accountId ? byId.get(accountId) : undefined;
+          // Groups with no account fall back to the first usable one.
+          const chosen =
+            account ?? accounts.find((a) => a.enabled && a.session_status === "connected");
+          if (!chosen?.enabled || chosen.session_status !== "connected") return null;
+          return chosen;
+        };
+
         // ── 1. Safety limit: scans per hour ─────────────────────────────
         const hourAgo = new Date(now.getTime() - 3600_000).toISOString();
         const scansThisHour = await supabaseAdmin
@@ -53,13 +70,16 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
         ).toISOString();
         const { data: staleGroups } = await supabaseAdmin
           .from("groups")
-          .select("id, name, url, last_scanned_at")
+          .select("id, name, url, last_scanned_at, account_id")
           .eq("enabled", true)
           .or(`last_scanned_at.is.null,last_scanned_at.lt.${staleBefore}`)
           .order("last_scanned_at", { ascending: true, nullsFirst: true })
           .limit(Math.max(0, scanBudget));
 
         for (const g of staleGroups ?? []) {
+          const account = usable(g.account_id);
+          if (!account) continue;
+
           const { data: existing } = await supabaseAdmin
             .from("worker_jobs")
             .select("id")
@@ -73,9 +93,17 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             type: "scan_group",
             priority: 6,
             group_id: g.id,
-            payload: { group_id: g.id, group_name: g.name, url: g.url },
+            account_id: account.id,
+            payload: {
+              group_id: g.id,
+              group_name: g.name,
+              url: g.url,
+              profile_dir: account.profile_dir,
+              account_name: account.name,
+            },
           });
         }
+
 
         // ── 2. Publish gating ───────────────────────────────────────────
         const quiet = inQuietHours(s, now);
@@ -111,7 +139,7 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
           ? await supabaseAdmin
               .from("scheduled_posts")
               .select(
-                "id, group_id, content_piece_id, groups(name, url, can_post, enabled), content_pieces(body, status)",
+                "id, group_id, content_piece_id, groups(name, url, can_post, enabled, account_id), content_pieces(body, status)",
               )
               .eq("status", "scheduled")
               .lte("scheduled_for", now.toISOString())
@@ -125,8 +153,10 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             url: string;
             can_post: boolean;
             enabled: boolean;
+            account_id: string | null;
           } | null;
           const piece = item.content_pieces as { body: string; status: string } | null;
+
 
           if (!group?.can_post || !group.enabled) {
             await supabaseAdmin
@@ -192,6 +222,24 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             }
           }
 
+          const account = usable(group.account_id);
+          if (!account) {
+            await supabaseAdmin
+              .from("scheduled_posts")
+              .update({
+                status: "skipped",
+                error: "The Facebook account for this group is disabled or signed out",
+              })
+              .eq("id", item.id);
+            await log(
+              "publish",
+              "warning",
+              "Held a post back — that group's Facebook account is signed out",
+              item.group_id,
+            );
+            continue;
+          }
+
           if (budget <= 0) break;
           budget -= 1;
 
@@ -199,14 +247,18 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             type: "publish_post",
             priority: 3,
             group_id: item.group_id,
+            account_id: account.id,
             payload: {
               scheduled_post_id: item.id,
               group_id: item.group_id,
               group_name: group.name,
               url: group.url,
               body: piece.body,
+              profile_dir: account.profile_dir,
+              account_name: account.name,
             },
           });
+
           await supabaseAdmin
             .from("scheduled_posts")
             .update({ status: "publishing", claimed_at: now.toISOString() })
@@ -255,7 +307,16 @@ export const Route = createFileRoute("/api/public/worker/jobs")({
             max_attempts: s.max_job_attempts,
             delay_before_seconds: randomBetween(s.min_delay_seconds, s.max_delay_seconds),
           })),
+          accounts: accounts.map((a) => ({
+            id: a.id,
+            name: a.name,
+            profile_dir: a.profile_dir,
+            enabled: a.enabled,
+            pending_command: a.pending_command,
+            needs_login: a.needs_login,
+          })),
           recovery,
+
           behaviour: {
             window_start_hour: s.window_start_hour,
             window_end_hour: s.window_end_hour,

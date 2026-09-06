@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as ContentRouteImport } from './routes/content'
 import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as GroupsRouteImport } from './routes/groups'
@@ -30,6 +31,11 @@ import { Route as ApiPublicWorkerJobsRouteImport } from './routes/api/public/wor
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountsRoute = AccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContentRoute = ContentRouteImport.update({
@@ -117,6 +123,7 @@ const ApiPublicWorkerJobsRoute = ApiPublicWorkerJobsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteRouteWithChildren
+  '/accounts': typeof AccountsRoute
   '/content': typeof ContentRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/groups': typeof GroupsRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accounts': typeof AccountsRoute
   '/content': typeof ContentRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/groups': typeof GroupsRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteRouteWithChildren
+  '/accounts': typeof AccountsRoute
   '/content': typeof ContentRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/groups': typeof GroupsRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
+    | '/accounts'
     | '/content'
     | '/diagnostics'
     | '/groups'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accounts'
     | '/content'
     | '/diagnostics'
     | '/groups'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/settings'
+    | '/accounts'
     | '/content'
     | '/diagnostics'
     | '/groups'
@@ -233,6 +245,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
+  AccountsRoute: typeof AccountsRoute
   ContentRoute: typeof ContentRoute
   DiagnosticsRoute: typeof DiagnosticsRoute
   GroupsRoute: typeof GroupsRoute
@@ -255,6 +268,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accounts': {
+      id: '/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof AccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/content': {
@@ -389,6 +409,7 @@ const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRouteRoute: SettingsRouteRouteWithChildren,
+  AccountsRoute: AccountsRoute,
   ContentRoute: ContentRoute,
   DiagnosticsRoute: DiagnosticsRoute,
   GroupsRoute: GroupsRoute,
