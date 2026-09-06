@@ -22,9 +22,15 @@ export const config = {
   token: process.env.WORKER_TOKEN ?? "",
   port: num("PORT", 8787),
   bind: process.env.BIND ?? "127.0.0.1",
+  // "default" account profile — kept as-is so existing installs stay logged in.
   profileDir: process.env.PROFILE_DIR ?? "./fb-profile",
+  // Every additional Facebook account gets its own folder in here.
+  profilesRoot: process.env.PROFILES_ROOT ?? "./fb-profiles",
   headless: process.env.HEADLESS !== "false",
   loginOnly: process.env.LOGIN_ONLY === "true",
+  // Which account the one-time login window signs in (profile folder name).
+  loginProfile: process.env.LOGIN_PROFILE ?? "default",
+
   heartbeatSeconds: num("HEARTBEAT_SECONDS", 60),
   pollSeconds: num("POLL_SECONDS", 60),
   logDir: process.env.LOG_DIR ?? "./logs",
