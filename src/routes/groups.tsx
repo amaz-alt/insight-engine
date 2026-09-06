@@ -46,6 +46,17 @@ function GroupsPage() {
   const [filter, setFilter] = useState("all");
 
 
+  const { data: accounts } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("accounts")
+        .select("id, name, enabled, session_status")
+        .order("created_at");
+      return data ?? [];
+    },
+  });
+
   const { data: folders } = useQuery({
     queryKey: ["folders"],
     queryFn: async () => {
@@ -53,6 +64,7 @@ function GroupsPage() {
       return data ?? [];
     },
   });
+
 
   const { data: groups, isPending } = useQuery({
     queryKey: ["groups"],
