@@ -117,6 +117,8 @@ function GroupsPage() {
         name: name.trim(),
         url: url.trim(),
         folder_id: folderId || null,
+        // Default to the only account when there's just one — no extra choice to make.
+        account_id: accountId || (accounts?.length === 1 ? accounts[0].id : null),
       });
       if (error) throw new Error(error.message);
     },
@@ -135,8 +137,14 @@ function GroupsPage() {
       values,
     }: {
       id: string;
-      values: { enabled?: boolean; can_post?: boolean; folder_id?: string | null };
+      values: {
+        enabled?: boolean;
+        can_post?: boolean;
+        folder_id?: string | null;
+        account_id?: string | null;
+      };
     }) => {
+
 
       const { error } = await supabase.from("groups").update(values).eq("id", id);
       if (error) throw new Error(error.message);
