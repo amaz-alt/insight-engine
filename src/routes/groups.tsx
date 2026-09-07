@@ -42,6 +42,8 @@ function GroupsPage() {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [folderId, setFolderId] = useState("");
+  const [accountId, setAccountId] = useState("");
+
   const [newFolder, setNewFolder] = useState("");
   const [filter, setFilter] = useState("all");
 
