@@ -131,6 +131,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/accounts", label: "Accounts", icon: UserCog },
   { to: "/groups", label: "Groups", icon: Users },
   { to: "/insights", label: "Demand", icon: BrainCircuit },
   { to: "/content", label: "Content", icon: PenLine },
@@ -141,36 +142,101 @@ const NAV = [
   { to: "/settings", label: "Settings", icon: Settings2 },
 ] as const;
 
-function SessionPill() {
-  const { data } = useQuery({
+const ONLINE_WINDOW_MS = 10 * 60_000;
+
+function useWorkerPulse() {
+  return useQuery({
     queryKey: ["session-status"],
     refetchInterval: 60_000,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("settings")
-        .select("session_status, last_heartbeat_at, fb_account_name")
-        .eq("id", true)
-        .maybeSingle();
-      return data;
+      const [settings, accounts] = await Promise.all([
+        supabase
+          .from("settings")
+          .select("session_status, last_heartbeat_at, fb_account_name")
+          .eq("id", true)
+          .maybeSingle(),
+        supabase.from("accounts").select("id, name, session_status, needs_login, enabled"),
+      ]);
+      const last = settings.data?.last_heartbeat_at ?? null;
+      return {
+        status: settings.data?.session_status ?? "disconnected",
+        lastHeartbeatAt: last,
+        accountName: settings.data?.fb_account_name ?? null,
+        online: last ? Date.now() - new Date(last).getTime() < ONLINE_WINDOW_MS : false,
+        signedOut: (accounts.data ?? []).filter((a) => a.enabled && a.needs_login),
+      };
     },
   });
+}
 
-  const status = data?.session_status ?? "disconnected";
-  const tone = status === "connected" ? "success" : status === "needs_login" ? "warning" : "neutral";
+function OfflineBanner() {
+  const { data } = useWorkerPulse();
+  if (!data) return null;
+
+  if (!data.online) {
+    return (
+      <div className="border-b border-destructive/50 bg-destructive/10 px-5 py-3">
+        <p className="text-sm font-semibold text-destructive">
+          Your helper on the server has stopped — nothing is being collected or posted right now.
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Last check-in {relativeTime(data.lastHeartbeatAt)}. Start it again on your server, then
+          this warning disappears within a minute.{" "}
+          <Link to="/worker" className="underline">
+            See what to do
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
+  if (data.signedOut.length > 0) {
+    return (
+      <div className="border-b border-warning/50 bg-warning/10 px-5 py-3">
+        <p className="text-sm font-semibold text-warning">
+          {data.signedOut.map((a) => a.name).join(", ")}{" "}
+          {data.signedOut.length === 1 ? "is" : "are"} signed out of Facebook — that account is
+          paused until you sign in once.
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          <Link to="/accounts" className="underline">
+            Open Accounts
+          </Link>{" "}
+          for the one-line sign-in command.
+        </p>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function SessionPill() {
+  const { data } = useWorkerPulse();
+  const status = data?.status ?? "disconnected";
+  const offline = data ? !data.online : false;
+  const tone = offline
+    ? "danger"
+    : status === "connected"
+      ? "success"
+      : status === "needs_login"
+        ? "warning"
+        : "neutral";
 
   return (
     <div className="flex items-center gap-2">
       <Badge tone={tone}>
         <Activity className="size-3" />
-        {status === "connected" ? "worker live" : status.replace("_", " ")}
+        {offline ? "worker offline" : status === "connected" ? "worker live" : status.replace("_", " ")}
       </Badge>
       <span className="hidden text-xs text-muted-foreground sm:inline">
-        {data?.fb_account_name ? `${data.fb_account_name} · ` : ""}
-        {relativeTime(data?.last_heartbeat_at)}
+        {data?.accountName ? `${data.accountName} · ` : ""}
+        {relativeTime(data?.lastHeartbeatAt)}
       </span>
     </div>
   );
 }
+
 
 function Shell({ children }: { children: ReactNode }) {
   return (
