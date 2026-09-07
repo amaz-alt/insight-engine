@@ -296,7 +296,10 @@ function Shell({ children }: { children: ReactNode }) {
           <SessionPill />
         </header>
 
+        <OfflineBanner />
+
         <main className="min-w-0 flex-1 px-5 py-6">{children}</main>
+
       </div>
     </div>
   );
