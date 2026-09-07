@@ -118,7 +118,7 @@ function GroupsPage() {
         url: url.trim(),
         folder_id: folderId || null,
         // Default to the only account when there's just one — no extra choice to make.
-        account_id: accountId || (accounts?.length === 1 ? accounts[0].id : null),
+        account_id: accountId || (accounts?.length === 1 ? (accounts[0]?.id ?? null) : null),
       });
       if (error) throw new Error(error.message);
     },
