@@ -73,7 +73,7 @@ function GroupsPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("groups")
-        .select("*, folders(name)")
+        .select("*, folders(name), accounts(name, session_status)")
         .order("engagement_score", { ascending: false });
       return data ?? [];
     },
