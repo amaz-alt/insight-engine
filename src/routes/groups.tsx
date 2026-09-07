@@ -199,6 +199,19 @@ function GroupsPage() {
               ))}
             </Select>
           </Field>
+          {(accounts?.length ?? 0) > 1 ? (
+            <Field label="account">
+              <Select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                <option value="">Pick an account</option>
+                {(accounts ?? []).map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : null}
+
           <Button variant="primary" onClick={() => addGroup.mutate()} disabled={addGroup.isPending}>
             <Plus /> Add
           </Button>
