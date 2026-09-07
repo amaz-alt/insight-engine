@@ -42,6 +42,8 @@ function GroupsPage() {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [folderId, setFolderId] = useState("");
+  const [accountId, setAccountId] = useState("");
+
   const [newFolder, setNewFolder] = useState("");
   const [filter, setFilter] = useState("all");
 
@@ -71,7 +73,7 @@ function GroupsPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("groups")
-        .select("*, folders(name)")
+        .select("*, folders(name), accounts(name, session_status)")
         .order("engagement_score", { ascending: false });
       return data ?? [];
     },
@@ -115,6 +117,8 @@ function GroupsPage() {
         name: name.trim(),
         url: url.trim(),
         folder_id: folderId || null,
+        // Default to the only account when there's just one — no extra choice to make.
+        account_id: accountId || (accounts?.length === 1 ? (accounts[0]?.id ?? null) : null),
       });
       if (error) throw new Error(error.message);
     },
@@ -133,8 +137,14 @@ function GroupsPage() {
       values,
     }: {
       id: string;
-      values: { enabled?: boolean; can_post?: boolean; folder_id?: string | null };
+      values: {
+        enabled?: boolean;
+        can_post?: boolean;
+        folder_id?: string | null;
+        account_id?: string | null;
+      };
     }) => {
+
 
       const { error } = await supabase.from("groups").update(values).eq("id", id);
       if (error) throw new Error(error.message);
@@ -189,6 +199,19 @@ function GroupsPage() {
               ))}
             </Select>
           </Field>
+          {(accounts?.length ?? 0) > 1 ? (
+            <Field label="account">
+              <Select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                <option value="">Pick an account</option>
+                {(accounts ?? []).map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : null}
+
           <Button variant="primary" onClick={() => addGroup.mutate()} disabled={addGroup.isPending}>
             <Plus /> Add
           </Button>
@@ -266,7 +289,26 @@ function GroupsPage() {
                 </div>
 
                 <div className="flex items-center gap-5">
+                  {(accounts?.length ?? 0) > 1 ? (
+                    <Select
+                      aria-label="Facebook account"
+                      className="h-8 w-40 text-xs"
+                      value={g.account_id ?? ""}
+                      onChange={(e) =>
+                        patch.mutate({ id: g.id, values: { account_id: e.target.value || null } })
+                      }
+                    >
+                      <option value="">No account</option>
+                      {(accounts ?? []).map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </Select>
+                  ) : null}
+
                   <Select
+
                     aria-label="Folder"
                     className="h-8 w-36 text-xs"
                     value={g.folder_id ?? ""}
