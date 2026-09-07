@@ -276,7 +276,26 @@ function GroupsPage() {
                 </div>
 
                 <div className="flex items-center gap-5">
+                  {(accounts?.length ?? 0) > 1 ? (
+                    <Select
+                      aria-label="Facebook account"
+                      className="h-8 w-40 text-xs"
+                      value={g.account_id ?? ""}
+                      onChange={(e) =>
+                        patch.mutate({ id: g.id, values: { account_id: e.target.value || null } })
+                      }
+                    >
+                      <option value="">No account</option>
+                      {(accounts ?? []).map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </Select>
+                  ) : null}
+
                   <Select
+
                     aria-label="Folder"
                     className="h-8 w-36 text-xs"
                     value={g.folder_id ?? ""}
